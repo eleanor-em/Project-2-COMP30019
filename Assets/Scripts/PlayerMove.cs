@@ -1,78 +1,7 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
 
-public class PlayerMove : MonoBehaviour {
-    public float Speed;
-    public float JumpSpeed;
-    public float Gravity;
-
-    public float RollTime;
-    public float RollSpeed;
-
-    public float StaminaRegen;
-    public float InairRegenFactor;
-    public float RollStaminaCost;
-
-    public Text staminaText;
-    
-    private Vector3 destination;
-    // Unit vector that stores the most recent movement direction
-    private Vector3 direction = Vector3.forward;
-
-    private CharacterController controller;
-    private float yspeed;
-
-    // Only check for Collision objects
-    private int CollisionMask;
-
-    // State variables
-    private bool rolling = false;
-    private bool moving = false;
-    private float stamina = 100;
-
-    // Coroutine to roll for a given period
-    private IEnumerator Roll() {
-        if (!rolling && stamina > RollStaminaCost) {
-            rolling = true;
-            stamina -= RollStaminaCost;
-            // Roll for a certain time period
-            yield return new WaitForSeconds(RollTime);
-            StopRoll();
-        }
-        yield break;
-    }
-
-    private void StopRoll() {
-        rolling = false;
-        // Update destination (if we weren't already moving)
-        if (!moving) {
-            destination = transform.position;
-        }
-    }
-
-    private void Jump() {
-        if (!rolling && controller.isGrounded) {
-            yspeed = JumpSpeed;
-        }
-    }
-
-    private void OnUpDownCollision(ControllerColliderHit hit) {
-        yspeed = 0;
-    }
-
-    // If we hit a wall
-    private void OnOtherCollision(ControllerColliderHit hit) {
-        if (rolling) {
-            StopRoll();
-            // Rolling into a wall means we should stop moving
-            destination = transform.position;
-            if (moving) {
-                ///TODO: Generate impact with wall here
-            }
-        }
-    }
-
+public abstract class PlayerBehaviour : MonoBehaviour {
     void OnControllerColliderHit(ControllerColliderHit hit) {
         // Separate into two logical cases for platforming
         if (hit.normal == Vector3.up || hit.normal == Vector3.down) {
@@ -82,9 +11,84 @@ public class PlayerMove : MonoBehaviour {
         }
     }
 
+    protected virtual void OnUpDownCollision(ControllerColliderHit hit) { }
+    protected virtual void OnOtherCollision(ControllerColliderHit hit) { }
+}
+
+[RequireComponent(typeof(CharacterController),
+                  typeof(PlayerStamina),
+                  typeof(PlayerJump))]
+public class PlayerMove : PlayerBehaviour {
+    public float Speed = 4;
+    public float YSpeed { get; set; }
+
+    public float RollTime = 0.4f;
+    public float RollSpeed = 8;
+
+    public float RollStaminaCost = 40;
+    
+    private Vector3 destination;
+    // Unit vector that stores the most recent movement direction
+    private Vector3 direction = Vector3.forward;
+    public Vector3 Direction { get { return direction; } set { direction = value; } }
+
+    private CharacterController controller;
+    private PlayerStamina playerStamina;
+    private PlayerJump playerJump;
+
+    // Only check for Collision objects
+    private int CollisionMask;
+
+    // State variables
+    private bool rolling = false;
+    public bool Rolling { get { return rolling; } }
+
+    private bool moving = false;
+    public bool Moving { get { return moving; } }
+
+    public bool AutoMove { get; set; }
+    public float AutoMoveSpeed { get; set; }
+
+    // Coroutine to roll for a given period
+    private IEnumerator Roll() {
+        if (!rolling && playerStamina.DeductStamina(RollStaminaCost)) {
+            AutoMove = true;
+            AutoMoveSpeed = RollSpeed;
+            rolling = true;
+            // Roll for a certain time period
+            yield return new WaitForSeconds(RollTime);
+            StopRoll();
+        }
+        yield break;
+    }
+
+    private void StopRoll() {
+        rolling = false;
+        AutoMove = false;
+        // Update destination (if we weren't still moving)
+        if (!moving) {
+            destination = transform.position;
+        }
+    }
+
+    // If we hit a wall
+    override protected void OnOtherCollision(ControllerColliderHit hit) {
+        if (rolling) {
+            StopRoll();
+            // Rolling into a wall means we should stop moving
+            destination = transform.position;
+            if (moving) {
+                //// TODO: Generate impact with wall here
+            }
+        }
+    }
+    
     void Start() {
         destination = transform.position;
         controller = GetComponent<CharacterController>();
+        playerStamina = GetComponent<PlayerStamina>();
+        playerJump = GetComponent<PlayerJump>();
+
         CollisionMask = 1 << LayerMask.NameToLayer("Collision");
     }
     
@@ -99,6 +103,10 @@ public class PlayerMove : MonoBehaviour {
                                           hit.point.z);
                 direction = (destination - transform.position).normalized;
             }
+            moving = true;
+            // Take back control of movement
+            AutoMove = false;
+            playerJump.TouchedWall = false;
         }
     }
     
@@ -108,19 +116,20 @@ public class PlayerMove : MonoBehaviour {
                         transform.position.y,
                         destination.z);
         // If we're more than a given distance away, move closer
-        if ((destination - transform.position).magnitude > Speed * Time.fixedDeltaTime) {
-            controller.Move(direction * Speed * Time.fixedDeltaTime);
-            moving = true;
+        if (moving && (destination - transform.position).magnitude > Speed * Time.fixedDeltaTime) {
+            // Don't actually move if another routine has control, but don't stop from moving afterwards
+            if (!AutoMove) {
+                direction = (destination - transform.position).normalized;
+                controller.Move(direction * Speed * Time.fixedDeltaTime);
+            }
         } else {
-            transform.position = destination;
+            // issue with rolling here
+            destination = transform.position;
             moving = false;
         }
     }
         
     void Update() {
-        if (Input.GetKeyDown(KeyCode.Z)) { 
-            Jump();
-        }
         if (Input.GetKeyDown(KeyCode.X)) {
             StartCoroutine("Roll");
         }
@@ -130,25 +139,22 @@ public class PlayerMove : MonoBehaviour {
             SetDestination();
         }
 
-        // Regenerate stamina
-        stamina += ((controller.isGrounded) ? (StaminaRegen) : (StaminaRegen * InairRegenFactor))
-                    * Time.deltaTime;
-        if (stamina > 100) {
-            stamina = 100;
+        // Kill non-roll auto move on the ground
+        if (AutoMove && !rolling && controller.isGrounded) {
+            AutoMove = false;
+            destination = transform.position;
         }
-
-        staminaText.text = "Stamina: " + (int)stamina + "%";
     }
 
     // Do physics here
     void FixedUpdate() {
-        if (rolling) {
+        if (AutoMove) {
             // Move in a fixed direction if we're rolling
-            controller.Move(direction * RollSpeed * Time.fixedDeltaTime);
-        } else {
-            MoveToDestination();
+            controller.Move(direction * AutoMoveSpeed * Time.fixedDeltaTime);
         }
-        yspeed -= Gravity * Time.fixedDeltaTime;
-        controller.Move(Vector3.up * yspeed * Time.fixedDeltaTime);
+        MoveToDestination();
+        // isGrounded fails if Move isn't handled like this. Set to 0 to allow superposition of velocity
+        controller.Move(YSpeed * Vector3.up * Time.fixedDeltaTime);
+        YSpeed = 0;
     }
 }
