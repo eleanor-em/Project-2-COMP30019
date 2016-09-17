@@ -88,7 +88,7 @@ public class PlayerMove : PlayerBehaviour {
         controller = GetComponent<CharacterController>();
         playerStamina = GetComponent<PlayerStamina>();
         playerJump = GetComponent<PlayerJump>();
-
+            
         CollisionMask = 1 << LayerMask.NameToLayer("Collision");
     }
     

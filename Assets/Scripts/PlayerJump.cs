@@ -2,23 +2,30 @@
 using System.Collections;
 
 [RequireComponent(typeof(CharacterController),
-                  typeof(PlayerMove))]
+                  typeof(PlayerMove),
+                  typeof(PlayerStamina))]
 public class PlayerJump : PlayerBehaviour {
     public float JumpSpeed;
     public float Gravity;
-    public float WallJumpFactor;
+    public float WallJumpCost;
 
     private float yspeed;
+
     private CharacterController controller;
     private PlayerMove playerMove;
+    private PlayerStamina playerStamina;
+
     private bool touchedWall;
     public bool TouchedWall { get { return touchedWall; } set { touchedWall = value; } }
     private Vector3 wallNormal;
+
+    private bool jump = false;
 
     // Use this for initialization
     void Start () {
         controller = GetComponent<CharacterController>();
         playerMove = GetComponent<PlayerMove>();
+        playerStamina = GetComponent<PlayerStamina>();
     }
 
     private void Jump() {
@@ -28,11 +35,12 @@ public class PlayerJump : PlayerBehaviour {
     }
 
     private void WallJump() {
-        if (touchedWall) {
+        if (touchedWall && playerStamina.DeductStamina(WallJumpCost)) {
+            touchedWall = false;
             playerMove.Direction = wallNormal;
             playerMove.AutoMove = true;
             playerMove.AutoMoveSpeed = playerMove.Speed;
-            yspeed = JumpSpeed * WallJumpFactor;
+            yspeed = JumpSpeed;
         }
     }
 
@@ -48,12 +56,12 @@ public class PlayerJump : PlayerBehaviour {
     
     void Update() {
         // Cancel wall jump if the player touched the ground or started to move
-        if (playerMove.AutoMove || controller.isGrounded) {
+        if (playerMove.Rolling || controller.isGrounded) {
             touchedWall = false;
         }
         if (Input.GetKeyDown(KeyCode.Z)) {
             if (controller.isGrounded) {
-                Jump();
+                jump = true;
             } else {
                 WallJump();
             }
@@ -61,6 +69,13 @@ public class PlayerJump : PlayerBehaviour {
     }
 
     void FixedUpdate () {
+        if (controller.isGrounded) {
+            yspeed = 0;
+            if (jump) {
+                Jump();
+                jump = false;
+            }
+        }
         yspeed -= Gravity * Time.fixedDeltaTime;
         // Hack: controller.Move must be handled by playerMove otherwise controller.isGrounded breaks
         playerMove.YSpeed += yspeed;
