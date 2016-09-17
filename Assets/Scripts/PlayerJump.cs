@@ -8,6 +8,7 @@ public class PlayerJump : PlayerBehaviour {
     public float JumpSpeed;
     public float Gravity;
     public float WallJumpCost;
+    public float WallJumpFactor;
 
     private float yspeed;
 
@@ -40,7 +41,7 @@ public class PlayerJump : PlayerBehaviour {
             playerMove.Direction = wallNormal;
             playerMove.AutoMove = true;
             playerMove.AutoMoveSpeed = playerMove.Speed;
-            yspeed = JumpSpeed;
+            yspeed = JumpSpeed * WallJumpFactor;
         }
     }
 

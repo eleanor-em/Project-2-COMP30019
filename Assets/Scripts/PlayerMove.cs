@@ -144,6 +144,7 @@ public class PlayerMove : PlayerBehaviour {
             AutoMove = false;
             destination = transform.position;
         }
+        Debug.Log(SystemInfo.supportsAccelerometer);
     }
 
     // Do physics here
