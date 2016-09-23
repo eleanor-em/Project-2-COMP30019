@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System;
 
 public class FollowPlayer : MonoBehaviour {
     public GameObject Player;
@@ -19,6 +17,12 @@ public class FollowPlayer : MonoBehaviour {
     private float posLerpTime;
     private float rotLerpTime;
 
+    private PlayerJump jump;
+
+    void Start() {
+        jump = Player.GetComponent<PlayerJump>();
+    }
+
 	void FixedUpdate () {
         if (moving) {
             transform.position = Vector3.Lerp(oldPos, targetPos, posLerpTime);
@@ -28,13 +32,11 @@ public class FollowPlayer : MonoBehaviour {
 
             if (posLerpTime >= 1 && rotLerpTime >= 1) {
                 moving = false;
-                posLerpTime = 0;
-                rotLerpTime = 0;
             }
         }
         // Follow player's y
         transform.position = new Vector3(transform.position.x,
-                                         Player.transform.position.y + Offset,
+                                         jump.LastGoodY + Offset,
                                          transform.position.z);
     }
 
@@ -42,9 +44,13 @@ public class FollowPlayer : MonoBehaviour {
         moving = true;
         targetPos = room.CamPosition;
         targetRot = room.CamRotation;
+
         // Don't move in y
         oldPos = transform.position;
-        oldPos.Scale(new Vector3(1, 0, 1));
         oldRot = transform.rotation;
+        
+        // Reset our lerp times here in case a new room is reached while moving
+        posLerpTime = 0;
+        rotLerpTime = 0;
     }
 }

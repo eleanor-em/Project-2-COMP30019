@@ -15,7 +15,7 @@ public class PlayerStamina : MonoBehaviour {
     /// Deduct the given amount of stamina.
     /// </summary>
     /// <returns>
-    /// Whether the stamina was high enough to deduct the amount;
+    /// Whether the stamina was high enough to deduct the amount
     /// </returns>
     public bool DeductStamina(float amount) {
         if (stamina >= amount) {

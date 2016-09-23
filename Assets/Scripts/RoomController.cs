@@ -16,6 +16,10 @@ public class Room {
         camRotation = camRot;
     }
 
+    public override int GetHashCode() {
+        return name.GetHashCode();
+    }
+
     public override bool Equals(object obj) {
         if (obj is Room) {
             return name.Equals((obj as Room).name);
@@ -40,7 +44,6 @@ public class RoomController : MonoBehaviour {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, Vector3.down, out hit, 100, collisionMask.value)) {
             Room next = hit.transform.gameObject.GetComponent<RoomContainer>().Room;
-            Debug.Log(next.Name);
             if (next != room) {
                 room = next;
                 Camera.main.GetComponent<FollowPlayer>().RoomChange(room);

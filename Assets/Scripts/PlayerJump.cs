@@ -9,6 +9,7 @@ public class PlayerJump : PlayerBehaviour {
     public float Gravity;
     public float WallJumpCost;
     public float WallJumpFactor;
+    public float DeathTime = 2;
 
     private float yspeed;
 
@@ -19,6 +20,12 @@ public class PlayerJump : PlayerBehaviour {
     private bool touchedWall;
     public bool TouchedWall { get { return touchedWall; } set { touchedWall = value; } }
     private Vector3 wallNormal;
+
+    private GameObject lastTouched;
+    private bool dying = false;
+    public bool Dying { get { return dying; } }
+    private float lastGoodY;
+    public float LastGoodY { get { return lastGoodY; } }
 
     private bool jump = false;
 
@@ -50,11 +57,31 @@ public class PlayerJump : PlayerBehaviour {
         wallNormal = hit.normal;
     }
 
+    // Needed to deal with the case where the player jumps while underneath a platform
     override protected void OnUpDownCollision(ControllerColliderHit hit) {
         yspeed = 0;
+        // Store last solid ground
+        if (hit.normal == Vector3.up && !dying) {
+            lastTouched = hit.gameObject;
+        }
     }
 
-    
+    private IEnumerator Die() {
+        dying = true;
+        yield return new WaitForSeconds(DeathTime);
+        dying = false;
+        transform.position = lastTouched.transform.position + Vector3.up * 0.5f;
+        Debug.Log("Back up!");
+        yield break;
+    }
+
+    void OnTriggerEnter(Collider collider) {
+        if (collider.gameObject.CompareTag("Hazard")) {
+            Debug.Log("Dying!");
+            StartCoroutine("Die");
+        }
+    }
+        
     void Update() {
         // Cancel wall jump if the player touched the ground or started to move
         if (playerMove.Rolling || controller.isGrounded) {
@@ -80,5 +107,12 @@ public class PlayerJump : PlayerBehaviour {
         yspeed -= Gravity * Time.fixedDeltaTime;
         // Hack: controller.Move must be handled by playerMove otherwise controller.isGrounded breaks
         playerMove.YSpeed += yspeed;
+    }
+
+    void LateUpdate() {
+        // Store the last y from before we died so that the camera follows us smoothly
+        if (!dying) {
+            lastGoodY = transform.position.y;
+        }
     }
 }

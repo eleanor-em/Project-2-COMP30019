@@ -26,6 +26,8 @@ public class PlayerMove : PlayerBehaviour {
     public float RollSpeed = 8;
 
     public float RollStaminaCost = 40;
+
+    public GameObject moveTargetPrefab;
     
     private Vector3 destination;
     // Unit vector that stores the most recent movement direction
@@ -35,6 +37,8 @@ public class PlayerMove : PlayerBehaviour {
     private CharacterController controller;
     private PlayerStamina playerStamina;
     private PlayerJump playerJump;
+
+    private GameObject moveTarget;
 
     // Only check for Collision objects
     private int CollisionMask;
@@ -59,7 +63,7 @@ public class PlayerMove : PlayerBehaviour {
             yield return new WaitForSeconds(RollTime);
             StopRoll();
         }
-        yield break;
+        //yield break;
     }
 
     private void StopRoll() {
@@ -73,13 +77,20 @@ public class PlayerMove : PlayerBehaviour {
 
     // If we hit a wall
     override protected void OnOtherCollision(ControllerColliderHit hit) {
-        if (rolling) {
+        // Position comparison is necessary to allow rolling off platforms
+        if (rolling && transform.position.y <= hit.transform.position.y) {
             StopRoll();
             // Rolling into a wall means we should stop moving
             destination = transform.position;
             if (moving) {
                 //// TODO: Generate impact with wall here
             }
+        }
+    }
+
+    void OnCollisionEnter(Collision collision) {
+        if (collision.gameObject.CompareTag("Hazard")) {
+
         }
     }
     
@@ -93,7 +104,7 @@ public class PlayerMove : PlayerBehaviour {
     }
     
     private void SetDestination() {
-        if (!rolling) {
+        if (!rolling && (!AutoMove || YSpeed <= 0)) {
             // Raycast to find where the user clicked
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -102,6 +113,12 @@ public class PlayerMove : PlayerBehaviour {
                                           transform.position.y,
                                           hit.point.z);
                 direction = (destination - transform.position).normalized;
+
+                Destroy(moveTarget);
+                moveTarget = Instantiate<GameObject>(moveTargetPrefab);
+                moveTarget.transform.position = hit.point;
+                // rotate moveTarget into plane of target
+                moveTarget.transform.rotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
             }
             moving = true;
             // Take back control of movement
@@ -123,7 +140,9 @@ public class PlayerMove : PlayerBehaviour {
                 controller.Move(direction * Speed * Time.fixedDeltaTime);
             }
         } else {
-            // issue with rolling here
+            if (moving) {
+                Destroy(moveTarget);
+            }
             destination = transform.position;
             moving = false;
         }
@@ -144,7 +163,6 @@ public class PlayerMove : PlayerBehaviour {
             AutoMove = false;
             destination = transform.position;
         }
-        Debug.Log(SystemInfo.supportsAccelerometer);
     }
 
     // Do physics here
