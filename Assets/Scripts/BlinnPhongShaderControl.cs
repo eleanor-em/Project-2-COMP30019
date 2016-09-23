@@ -5,6 +5,7 @@ using System.Collections;
                   typeof(MeshFilter))]
 public class BlinnPhongShaderControl : MonoBehaviour {
     public Texture2D texture = null;
+    public Texture2D normalMap = null;
     public GameObject pointLightManager;
     public float textureScaleFactor = 1f;
 
@@ -40,9 +41,15 @@ public class BlinnPhongShaderControl : MonoBehaviour {
         // Grab the necessary components
         pointLights = pointLightManager.GetComponent<GetPointLights>();
         meshRenderer = GetComponent<MeshRenderer>();
-        // Get the necessary shader
+        // Automatically get the correct shader, and add parameters as needed
         if (texture != null) {
-            meshRenderer.material.shader = Shader.Find("Unlit/BlinnPhongTexShader");
+            if (normalMap != null) {
+                meshRenderer.material.shader = Shader.Find("Unlit/BlinnPhongTexNormalShader");
+                meshRenderer.material.SetTexture("_NormalMap", normalMap);
+            } else {
+                meshRenderer.material.shader = Shader.Find("Unlit/BlinnPhongTexShader");
+            }
+
             meshRenderer.material.SetTexture("_MainTex", texture);
             // Calculate scaling factors
             var mf = GetComponent<MeshFilter>();
