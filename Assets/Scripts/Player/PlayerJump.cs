@@ -69,6 +69,7 @@ public class PlayerJump : PlayerBehaviour {
     private IEnumerator Die() {
         dying = true;
         yield return new WaitForSeconds(DeathTime);
+        playerStamina.Damage();
         dying = false;
         transform.position = lastTouched.transform.position + Vector3.up * 0.5f;
         yield break;
@@ -76,7 +77,6 @@ public class PlayerJump : PlayerBehaviour {
 
     void OnTriggerEnter(Collider collider) {
         if (collider.gameObject.CompareTag("Hazard")) {
-            playerStamina.Damage();
             StartCoroutine("Die");
         }
     }

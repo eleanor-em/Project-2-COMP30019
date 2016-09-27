@@ -2,6 +2,8 @@
 {
 	SubShader
 	{
+		Tags { "RenderType"="Transparent" }
+		Blend SrcAlpha OneMinusSrcAlpha
 		Pass
 		{
 			CGPROGRAM
@@ -88,6 +90,7 @@
 				// Calculate fog from minimum distance to camera
 				float fogFactor = saturate(exp(-dist * _fogDensity));
 				col = lerp(_fogColor, col, fogFactor);
+				col.a = v.color.a;
 				return col;
 			}
 			ENDCG

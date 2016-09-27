@@ -34,6 +34,7 @@ public class BlinnPhongShaderControl : MonoBehaviour {
             meshRenderer.material.SetColor("_PointLightColors" + i.ToString(), lights[i].Color);
         }
         meshRenderer.material.SetInt("_PointLightCount", lights.Length);
+        meshRenderer.material.SetColor("_Color", color);
         // Debug
         meshRenderer.material.SetFloat("_Ka", ambientAlbedo);
         meshRenderer.material.SetFloat("_Kd", diffuseAlbedo);
@@ -69,7 +70,6 @@ public class BlinnPhongShaderControl : MonoBehaviour {
             meshRenderer.material.SetTextureScale("_MainTex", size);
         } else {
             meshRenderer.material.shader = Shader.Find("Unlit/BlinnPhongShader");
-            meshRenderer.material.SetColor("_Color", color);
         }
         // Set properties common to all shaders
 	}
