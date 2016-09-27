@@ -6,8 +6,12 @@ using System.Collections;
 public class BlinnPhongShaderControl : MonoBehaviour {
     public Texture2D texture = null;
     public Texture2D normalMap = null;
+    public Color color = Color.white;
     public GameObject pointLightManager;
     public float textureScaleFactor = 1f;
+
+    public Color fogColor;
+    public float fogDensity = 0.1f;
 
     private GetPointLights pointLights;
     private MeshRenderer meshRenderer;
@@ -30,11 +34,14 @@ public class BlinnPhongShaderControl : MonoBehaviour {
             meshRenderer.material.SetColor("_PointLightColors" + i.ToString(), lights[i].Color);
         }
         meshRenderer.material.SetInt("_PointLightCount", lights.Length);
+        // Debug
         meshRenderer.material.SetFloat("_Ka", ambientAlbedo);
         meshRenderer.material.SetFloat("_Kd", diffuseAlbedo);
         meshRenderer.material.SetFloat("_Ks", specularAlbedo);
         meshRenderer.material.SetFloat("_fAtt", attenuationFactor);
         meshRenderer.material.SetFloat("_N", specularExponent);
+        meshRenderer.material.SetColor("_fogColor", fogColor);
+        meshRenderer.material.SetFloat("_fogDensity", fogDensity);
     }
     
 	void Start () {
@@ -62,7 +69,9 @@ public class BlinnPhongShaderControl : MonoBehaviour {
             meshRenderer.material.SetTextureScale("_MainTex", size);
         } else {
             meshRenderer.material.shader = Shader.Find("Unlit/BlinnPhongShader");
+            meshRenderer.material.SetColor("_Color", color);
         }
+        // Set properties common to all shaders
 	}
 	
 	void Update () {

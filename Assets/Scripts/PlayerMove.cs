@@ -28,6 +28,7 @@ public class PlayerMove : PlayerBehaviour {
     public float RollStaminaCost = 40;
 
     public GameObject moveTargetPrefab;
+    public GameObject pointLight;
     
     private Vector3 destination;
     // Unit vector that stores the most recent movement direction
@@ -87,13 +88,7 @@ public class PlayerMove : PlayerBehaviour {
             }
         }
     }
-
-    void OnCollisionEnter(Collision collision) {
-        if (collision.gameObject.CompareTag("Hazard")) {
-
-        }
-    }
-    
+        
     void Start() {
         destination = transform.position;
         controller = GetComponent<CharacterController>();
@@ -175,5 +170,6 @@ public class PlayerMove : PlayerBehaviour {
         // isGrounded fails if Move isn't handled like this. Set to 0 to allow superposition of velocity
         controller.Move(YSpeed * Vector3.up * Time.fixedDeltaTime);
         YSpeed = 0;
+        pointLight.transform.position = transform.position;
     }
 }

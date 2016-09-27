@@ -71,13 +71,12 @@ public class PlayerJump : PlayerBehaviour {
         yield return new WaitForSeconds(DeathTime);
         dying = false;
         transform.position = lastTouched.transform.position + Vector3.up * 0.5f;
-        Debug.Log("Back up!");
         yield break;
     }
 
     void OnTriggerEnter(Collider collider) {
         if (collider.gameObject.CompareTag("Hazard")) {
-            Debug.Log("Dying!");
+            playerStamina.Damage();
             StartCoroutine("Die");
         }
     }

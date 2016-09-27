@@ -7,7 +7,10 @@ public class PlayerStamina : MonoBehaviour {
     public float StaminaRegen = 10;
     public float InairRegenFactor = 0.5f;
     public Text staminaText;
+    public int maxHearts = 4;
 
+    private int hearts;
+    public int Hearts { get { return hearts; } }
     private float stamina = 100;
     private CharacterController controller;
 	
@@ -24,9 +27,22 @@ public class PlayerStamina : MonoBehaviour {
         }
         return false;
     }
+
+    private void Die() {
+        //// TODO: Have player die if they run out of hearts
+        hearts = maxHearts;
+    }
+
+    public void Damage() {
+        hearts--;
+        if (hearts <= 0) {
+            Die();
+        }
+    }
     
     void Start() {
         controller = GetComponent<CharacterController>();
+        hearts = maxHearts;
     }
 
 	void Update () {
