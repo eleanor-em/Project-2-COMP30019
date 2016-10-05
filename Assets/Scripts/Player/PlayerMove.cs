@@ -111,7 +111,9 @@ public class PlayerMove : PlayerBehaviour {
                 Destroy(moveTarget);
                 moveTarget = Instantiate<GameObject>(moveTargetPrefab);
                 moveTarget.transform.position = hit.point;
-                // rotate moveTarget into plane of target
+                // Set up the target for moving platform
+                moveTarget.GetComponent<MoveTargetController>().Setup(hit.transform.gameObject);
+                // Rotate moveTarget into plane of target
                 moveTarget.transform.rotation = Quaternion.FromToRotation(Vector3.up, hit.normal);
             }
             moving = true;
@@ -122,6 +124,10 @@ public class PlayerMove : PlayerBehaviour {
     }
     
     private void MoveToDestination() {
+        // If we have a target, move to follow it
+        if (moveTarget != null) {
+            destination = moveTarget.transform.position;
+        }
         // Move only in x and z
         destination.Set(destination.x,
                         transform.position.y,
@@ -136,6 +142,7 @@ public class PlayerMove : PlayerBehaviour {
         } else {
             if (moving) {
                 Destroy(moveTarget);
+                moveTarget = null;
             }
             destination = transform.position;
             moving = false;

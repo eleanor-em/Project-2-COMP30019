@@ -5,8 +5,7 @@ public class Room {
     private string name;
     private Vector3 camPosition;
     private Quaternion camRotation;
-
-    public string Name { get { return name; } }
+    
     public Vector3 CamPosition { get { return camPosition; } }
     public Quaternion CamRotation { get { return camRotation; } }
 
