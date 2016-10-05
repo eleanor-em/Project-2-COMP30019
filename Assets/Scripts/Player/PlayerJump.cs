@@ -61,7 +61,7 @@ public class PlayerJump : PlayerBehaviour {
     override protected void OnUpDownCollision(ControllerColliderHit hit) {
         yspeed = 0;
         // Store last solid ground
-        if (hit.normal == Vector3.up && !dying) {
+        if (hit.normal == Vector3.up && !dying && !hit.collider.CompareTag("MovingPlatform")) {
             lastTouched = hit.gameObject;
         }
     }

@@ -64,7 +64,6 @@ public class PlayerMove : PlayerBehaviour {
             yield return new WaitForSeconds(RollTime);
             StopRoll();
         }
-        //yield break;
     }
 
     private void StopRoll() {
@@ -99,7 +98,7 @@ public class PlayerMove : PlayerBehaviour {
     }
     
     private void SetDestination() {
-        if (!rolling && (!AutoMove || YSpeed <= 0)) {
+        if (!rolling && (!AutoMove || YSpeed <= 0) && !playerJump.Dying) {
             // Raycast to find where the user clicked
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -162,6 +161,13 @@ public class PlayerMove : PlayerBehaviour {
 
     // Do physics here
     void FixedUpdate() {
+        // Handle moving platform
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, Vector3.down, out hit) && controller.isGrounded) {
+            if (hit.collider.CompareTag("MovingPlatform")) {
+                controller.Move(hit.collider.GetComponent<MovingPlatform>().Speed);
+            }
+        }
         if (AutoMove) {
             // Move in a fixed direction if we're rolling
             controller.Move(direction * AutoMoveSpeed * Time.fixedDeltaTime);
