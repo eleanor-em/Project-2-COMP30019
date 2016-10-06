@@ -25,18 +25,20 @@ public class BlinnPhongShaderControl : MonoBehaviour {
 
     // Hack for Unity 5.3 to pass an array to the shader. Cheers Alex, or whoever wrote that code.
     void passToShader() {
-        if (lights.Length >= 256) {
+        int numLights = lights.Length;
+        // Set light data
+        if (numLights >= 256) {
             Debug.LogWarning("Too many lights passed to shader. Some will not be used.");
+            numLights = 256;
         }
-        for (int i = 0; i < Mathf.Min(lights.Length, 256); ++i) {
-            meshRenderer.material.SetVector("_PointLightPositions" + i.ToString(),
-                lights[i].transform.position);
+        meshRenderer.material.SetInt("_PointLightCount", numLights);
+        for (int i = 0; i < numLights; ++i) {
+            meshRenderer.material.SetVector("_PointLightPositions" + i.ToString(), lights[i].transform.position);
             meshRenderer.material.SetColor("_PointLightColors" + i.ToString(), lights[i].color);
-            meshRenderer.material.SetFloat("_PointLightAttenuations" + i.ToString(), lights[i].range);
+            meshRenderer.material.SetVector("_PointLightAttenuations" + i.ToString(), new Vector2(lights[i].range, 0));
         }
-        meshRenderer.material.SetInt("_PointLightCount", lights.Length);
+        // Set light reflectance values
         meshRenderer.material.SetColor("_Color", color);
-        // Debug
         meshRenderer.material.SetFloat("_Ka", ambientAlbedo);
         meshRenderer.material.SetFloat("_Kd", diffuseAlbedo);
         meshRenderer.material.SetFloat("_Ks", specularAlbedo);
@@ -60,11 +62,11 @@ public class BlinnPhongShaderControl : MonoBehaviour {
             }
 
             meshRenderer.material.SetTexture("_MainTex", texture);
-            // Calculate scaling factors
+            // Calculate scaling factors by finding bounds
             var mf = GetComponent<MeshFilter>();
             var bounds = mf.mesh.bounds;
             var size = Vector3.Scale(bounds.size, transform.localScale) * textureScaleFactor;
-            // Use x and z bounds for small y scale
+            // Use x and z bounds for small y
             if (size.y < 0.001f) {
                 size.y = size.z;
             }
@@ -72,11 +74,9 @@ public class BlinnPhongShaderControl : MonoBehaviour {
         } else {
             meshRenderer.material.shader = Shader.Find("Unlit/BlinnPhongShader");
         }
-        // Set properties common to all shaders
 	}
 	
 	void Update () {
-        // Pass data to shader
         passToShader();
 	}
 }

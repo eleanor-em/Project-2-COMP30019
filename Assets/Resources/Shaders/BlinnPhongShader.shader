@@ -17,7 +17,7 @@
 			uniform int _PointLightCount;
 			uniform float3 _PointLightColors[256];
 			uniform float3 _PointLightPositions[256];
-			uniform float _PointLightAttenuations[256];
+			uniform float2 _PointLightAttenuations[256];
 
 			// Lighting parameters
 			uniform float _Ka;		// Ambient albedo
@@ -67,7 +67,7 @@
 					L = normalize(L);
 
 					// Calculate attenuation factor from an inverse exponential
-					float fAtt = exp(-_PointLightAttenuations[i] * lightDist);
+					float fAtt = saturate(exp(-pow(_PointLightAttenuations[i].x * lightDist, 2)));
 
 					float3 diffuse = fAtt * _PointLightColors[i].rgb
 						* _Kd * v.color.rgb * saturate(dot(normalize(L), normal));
@@ -97,6 +97,7 @@
 			
 			fixed4 frag(vertOut v) : SV_Target
 			{
+				//return float4(_PointLightAttenuations[0].x, _PointLightAttenuations[0].x, _PointLightAttenuations[0].x, 1);
 				// Interpolated normal
 				float3 normal = v.worldNormal;
 
