@@ -13,25 +13,26 @@ public class BlinnPhongShaderControl : MonoBehaviour {
     public Color fogColor;
     public float fogDensity = 0.1f;
 
-    private GetPointLights pointLights;
     private MeshRenderer meshRenderer;
+
+    private Light[] lights;
 
     // Lighting parameters
     public float ambientAlbedo = 1;
     public float diffuseAlbedo = 1;
     public float specularAlbedo = 1;
-    public float attenuationFactor = 1;
     public float specularExponent = 25;
 
     // Hack for Unity 5.3 to pass an array to the shader. Cheers Alex, or whoever wrote that code.
     void passToShader() {
-        PointLight[] lights = pointLights.Get();
         if (lights.Length >= 256) {
             Debug.LogWarning("Too many lights passed to shader. Some will not be used.");
         }
         for (int i = 0; i < Mathf.Min(lights.Length, 256); ++i) {
-            meshRenderer.material.SetVector("_PointLightPositions" + i.ToString(), lights[i].Position);
-            meshRenderer.material.SetColor("_PointLightColors" + i.ToString(), lights[i].Color);
+            meshRenderer.material.SetVector("_PointLightPositions" + i.ToString(),
+                lights[i].transform.position);
+            meshRenderer.material.SetColor("_PointLightColors" + i.ToString(), lights[i].color);
+            meshRenderer.material.SetFloat("_PointLightAttenuations" + i.ToString(), lights[i].range);
         }
         meshRenderer.material.SetInt("_PointLightCount", lights.Length);
         meshRenderer.material.SetColor("_Color", color);
@@ -39,15 +40,15 @@ public class BlinnPhongShaderControl : MonoBehaviour {
         meshRenderer.material.SetFloat("_Ka", ambientAlbedo);
         meshRenderer.material.SetFloat("_Kd", diffuseAlbedo);
         meshRenderer.material.SetFloat("_Ks", specularAlbedo);
-        meshRenderer.material.SetFloat("_fAtt", attenuationFactor);
         meshRenderer.material.SetFloat("_N", specularExponent);
         meshRenderer.material.SetColor("_fogColor", fogColor);
         meshRenderer.material.SetFloat("_fogDensity", fogDensity);
     }
     
 	void Start () {
-        // Grab the necessary components
-        pointLights = pointLightManager.GetComponent<GetPointLights>();
+        // Grab the light array
+        lights = FindObjectsOfType<Light>();
+        // Set shader values
         meshRenderer = GetComponent<MeshRenderer>();
         // Automatically get the correct shader, and add parameters as needed
         if (texture != null) {

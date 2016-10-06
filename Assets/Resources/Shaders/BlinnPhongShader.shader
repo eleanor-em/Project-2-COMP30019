@@ -17,10 +17,10 @@
 			uniform int _PointLightCount;
 			uniform float3 _PointLightColors[256];
 			uniform float3 _PointLightPositions[256];
+			uniform float _PointLightAttenuations[256];
 
 			// Lighting parameters
 			uniform float _Ka;		// Ambient albedo
-			uniform float _fAtt;	// Attenuation factor
 			uniform float _Kd;		// Diffuse albedo
 			uniform float _Ks;		// Specular albedo
 			uniform float _N;		// Specular exponent
@@ -43,6 +43,44 @@
 				float3 worldNormal : TEXCOORD1;
 				float4 color : COLOR;
 			};
+
+			float3 applyFog(float3 col, float dist) {
+				// Calculate fog from distance to camera
+				float fogFactor = saturate(exp(-dist * _fogDensity));
+				col = lerp(_fogColor.rgb, col, fogFactor);
+				return col;
+			}
+
+			fixed4 calculateLightColor(vertOut v, float3 normal) {
+				// View ray
+				float3 V = _WorldSpaceCameraPos - v.worldVertex;
+				float dist = length(V);
+				V = normalize(V);
+				// Calculate ambient light
+				float3 ambient = v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * _Ka;
+				// Sum diffuse and specular light for each source
+				float3 sum = float3(0, 0, 0);
+				for (int i = 0; i < _PointLightCount; ++i) {
+					// Light ray
+					float3 L = _PointLightPositions[i] - v.worldVertex;
+					float lightDist = length(L);
+					L = normalize(L);
+
+					// Calculate attenuation factor from an inverse exponential
+					float fAtt = exp(-_PointLightAttenuations[i] * lightDist);
+
+					float3 diffuse = fAtt * _PointLightColors[i].rgb
+						* _Kd * v.color.rgb * saturate(dot(normalize(L), normal));
+
+					// Approximation to reflected ray
+					float3 H = normalize(V + L);
+					float3 specular = fAtt * _PointLightColors[i].rgb
+						* _Ks * pow(saturate(dot(H, normal)), _N);
+
+					sum += diffuse + specular;
+				}
+				return fixed4(applyFog(ambient + sum, dist), v.color.a);
+			}
 			
 			vertOut vert(vertIn v)
 			{
@@ -57,41 +95,12 @@
 				return o;
 			}
 			
-			fixed4 frag (vertOut v) : SV_Target
+			fixed4 frag(vertOut v) : SV_Target
 			{
 				// Interpolated normal
 				float3 normal = v.worldNormal;
 
-				// Calculate ambient light
-				float3 ambient = v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * _Ka;
-
-				// View ray
-				float3 V = _WorldSpaceCameraPos - v.worldVertex;
-				float dist = length(V);
-				V = normalize(V);
-
-				// Sum diffuse and specular light for each source
-				float3 sum = float3(0, 0, 0);
-				for (int i = 0; i < _PointLightCount; ++i) {
-					// Light ray
-					float3 L = _PointLightPositions[i] - v.worldVertex;
-					float dist = length(L);
-					float3 diffuse = _fAtt * _PointLightColors[i].rgb
-						* _Kd * v.color.rgb * saturate(dot(normalize(L), normal));
-
-					// Approximation to reflected ray
-					float3 H = normalize(V + L);
-					float3 specular = _fAtt * _PointLightColors[i].rgb
-						* _Ks * pow(saturate(dot(H, normal)), _N);
-
-					sum += diffuse + specular;
-				}
-				fixed4 col = fixed4(ambient + sum, v.color.a);
-				// Calculate fog from minimum distance to camera
-				float fogFactor = saturate(exp(-dist * _fogDensity));
-				col = lerp(_fogColor, col, fogFactor);
-				col.a = v.color.a;
-				return col;
+				return calculateLightColor(v, normal);
 			}
 			ENDCG
 		}

@@ -28,7 +28,6 @@ public class PlayerMove : PlayerBehaviour {
     public float RollStaminaCost = 40;
 
     public GameObject moveTargetPrefab;
-    public GameObject pointLight;
     
     private Vector3 destination;
     // Unit vector that stores the most recent movement direction
@@ -140,7 +139,8 @@ public class PlayerMove : PlayerBehaviour {
                 controller.Move(direction * Speed * Time.fixedDeltaTime);
             }
         } else {
-            if (moving) {
+            // Check if grounded to handle the case where the player lands on a moving platform
+            if (moving && controller.isGrounded) {
                 Destroy(moveTarget);
                 moveTarget = null;
             }
@@ -183,6 +183,5 @@ public class PlayerMove : PlayerBehaviour {
         // isGrounded fails if Move isn't handled like this. Set to 0 to allow superposition of velocity
         controller.Move(YSpeed * Vector3.up * Time.fixedDeltaTime);
         YSpeed = 0;
-        pointLight.transform.position = transform.position;
     }
 }
