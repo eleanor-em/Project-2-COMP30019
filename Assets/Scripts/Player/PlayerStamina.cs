@@ -9,12 +9,12 @@ public class PlayerStamina : MonoBehaviour {
     public float InairRegenFactor = 0.5f;
     public float ImmuneTime = 1;
     public float ImmuneAlpha = 0.5f;
-    public Text staminaText;
     public int maxHearts = 4;
 
     private int hearts;
     public int Hearts { get { return hearts; } }
     private float stamina = 100;
+    public float Stamina {  get { return stamina; } }
     private CharacterController controller;
     private BlinnPhongShaderControl shader;
 
@@ -70,7 +70,6 @@ public class PlayerStamina : MonoBehaviour {
         if (stamina > 100) {
             stamina = 100;
         }
-        staminaText.text = "Stamina: " + (int)stamina + "%";
 
         if (immune) {
             shader.color.a = ImmuneAlpha;

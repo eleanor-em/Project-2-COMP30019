@@ -79,9 +79,6 @@ public class PlayerMove : PlayerBehaviour {
             StopRoll();
             // Rolling into a wall means we should stop moving
             destination = transform.position;
-            if (moving) {
-                //// TODO: Generate impact with wall here
-            }
         }
     }
         
@@ -90,7 +87,9 @@ public class PlayerMove : PlayerBehaviour {
         controller = GetComponent<CharacterController>();
         playerStamina = GetComponent<PlayerStamina>();
         playerJump = GetComponent<PlayerJump>();
-        CreateTextbox.Create();
+        CreateTextbox.Create("You", new string[]
+                             { "Lorem ipsum dolor sit amet, labore mandamus at per, debet invidunt in mei. Mel mucius argumentum no, ponderum suavitate ex eam. Ex lorem malis legimus his, his aperiam feugait nostrum ex. Ea qui veritus insolens perpetua. Ut eam prima persecuti, nihil nullam at mei. Te eos mucius pertinacia definitionem, ut tation invidunt per. Ex ferri rebum quo, sumo aliquip ius no. Definiebas adversarium te vim, mutat viris vidisse ut est. Ex nullam tamquam fastidii quo. Habeo feugait no eam. Per in affert similique, nec hinc paulo quidam ea. Ne has delicata splendide sententiae, ea vel quod mazim. Has no facer eruditi honestatis. At pro eros adversarium. Te mel voluptua consectetuer. Eros harum accusam no pro. Ut pro prima delicatissimi, vis detracto evertitur ea, his unum forensibus in. Tollit sapientem temporibus et sit, pri latine oportere eu, veritus apeirian sea et. Singulis sensibus forensibus et pro." }
+                            );
     }
     
     private void SetDestination() {
@@ -148,7 +147,9 @@ public class PlayerMove : PlayerBehaviour {
         
     void Update() {
         if (Input.GetKeyDown(KeyCode.X)) {
-            StartCoroutine("Roll");
+            if (!CreateTextbox.Continue()) {
+                StartCoroutine("Roll");
+            }
         }
 
         // On left mouse click
