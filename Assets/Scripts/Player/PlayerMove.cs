@@ -28,6 +28,7 @@ public class PlayerMove : PlayerBehaviour {
     public float RollStaminaCost = 40;
 
     public GameObject moveTargetPrefab;
+    public LayerMask CollisionMask;
     
     private Vector3 destination;
     // Unit vector that stores the most recent movement direction
@@ -39,10 +40,7 @@ public class PlayerMove : PlayerBehaviour {
     private PlayerJump playerJump;
 
     private GameObject moveTarget;
-
-    // Only check for Collision objects
-    private int CollisionMask;
-
+    
     // State variables
     private bool rolling = false;
     public bool Rolling { get { return rolling; } }
@@ -92,8 +90,7 @@ public class PlayerMove : PlayerBehaviour {
         controller = GetComponent<CharacterController>();
         playerStamina = GetComponent<PlayerStamina>();
         playerJump = GetComponent<PlayerJump>();
-            
-        CollisionMask = 1 << LayerMask.NameToLayer("Collision");
+        CreateTextbox.Create();
     }
     
     private void SetDestination() {
@@ -101,7 +98,7 @@ public class PlayerMove : PlayerBehaviour {
             // Raycast to find where the user clicked
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit, CollisionMask)) {
+            if (Physics.Raycast(ray, out hit, float.PositiveInfinity, CollisionMask)) {
                 destination = new Vector3(hit.point.x,
                                           transform.position.y,
                                           hit.point.z);

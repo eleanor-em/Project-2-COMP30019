@@ -73,8 +73,8 @@
 					float lightDist = length(L);
 					L = normalize(L);
 
-					// Calculate attenuation factor from an inverse exponential
-					float fAtt = exp(-_PointLightAttenuations[i] * lightDist);
+					// Calculate attenuation factor from a Gaussian
+					float fAtt = saturate(exp(-pow(_PointLightAttenuations[i].x * lightDist, 2)));
 
 					float3 diffuse = fAtt * _PointLightColors[i].rgb
 						* _Kd * v.color.rgb * saturate(dot(normalize(L), normal));
