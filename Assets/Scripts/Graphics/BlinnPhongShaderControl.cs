@@ -7,8 +7,7 @@ public class BlinnPhongShaderControl : MonoBehaviour {
     public Texture2D texture = null;
     public Texture2D normalMap = null;
     public Color color = Color.white;
-    public GameObject pointLightManager;
-    public float textureScaleFactor = 1f;
+    public float textureScaleFactor = 0;
 
     public Color fogColor;
     public float fogDensity = 0.1f;
@@ -62,15 +61,18 @@ public class BlinnPhongShaderControl : MonoBehaviour {
             }
 
             meshRenderer.material.SetTexture("_MainTex", texture);
-            // Calculate scaling factors by finding bounds
-            var mf = GetComponent<MeshFilter>();
-            var bounds = mf.mesh.bounds;
-            var size = Vector3.Scale(bounds.size, transform.localScale) * textureScaleFactor;
-            // Use x and z bounds for small y
-            if (size.y < 0.001f) {
-                size.y = size.z;
+            // This is for sizing/tiling non-UV-mapped textures
+            if (textureScaleFactor != 0) {
+                // Calculate scaling factors by finding bounds
+                var mf = GetComponent<MeshFilter>();
+                var bounds = mf.mesh.bounds;
+                var size = Vector3.Scale(bounds.size, transform.localScale) * textureScaleFactor;
+                // Use x and z bounds for small y
+                if (size.y < 0.001f) {
+                    size.y = size.z;
+                }
+                meshRenderer.material.SetTextureScale("_MainTex", size);
             }
-            meshRenderer.material.SetTextureScale("_MainTex", size);
         } else {
             meshRenderer.material.shader = Shader.Find("Unlit/BlinnPhongShader");
         }
