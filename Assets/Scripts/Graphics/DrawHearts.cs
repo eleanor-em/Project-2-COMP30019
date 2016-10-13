@@ -30,7 +30,7 @@ public class DrawHearts : MonoBehaviour {
         // Draw stamina bar
         r = new Rect(5, 42, 160, 12);
         GUI.DrawTexture(r, emptyStaminaTexture);
-        // Draw percentage
+        // Draw percentage bar
         r = new Rect(6, 43, 158 * stamina.Stamina / 100, 10);
         GUI.DrawTexture(r, staminaTexture);
     }

@@ -16,10 +16,13 @@ public class DrawAction : MonoBehaviour {
         actionText = actionTextObject.GetComponent<Text>();
     }
 
-    void Update() {
+    void LateUpdate() {
         actionText.text = "";
         if (CreateTextbox.ShowingBlockingText) {
             actionText.text = "Next";
+        }
+        else if (playerMove.NearChest) {
+            actionText.text = "Open";
         }
         else if (!playerMove.Rolling && playerStamina.Stamina >= playerMove.RollStaminaCost) {
             actionText.text = "Roll";

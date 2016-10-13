@@ -10,11 +10,15 @@ public class PlayerStamina : MonoBehaviour {
     public float ImmuneTime = 1;
     public float ImmuneAlpha = 0.5f;
     public int maxHearts = 4;
+    public Text GemText;
 
     private int hearts;
     public int Hearts { get { return hearts; } }
     private float stamina = 100;
     public float Stamina {  get { return stamina; } }
+    private int gems;
+    public int Gems { get { return gems; } }
+
     private CharacterController controller;
     private BlinnPhongShaderControl shader;
 
@@ -56,6 +60,13 @@ public class PlayerStamina : MonoBehaviour {
             }
         }
     }
+
+    public void AddGems(int amount) {
+        gems += amount;
+        if (gems < 0) {
+            gems = 0;
+        }
+    }
     
     void Start() {
         controller = GetComponent<CharacterController>();
@@ -76,5 +87,7 @@ public class PlayerStamina : MonoBehaviour {
         } else {
             shader.color.a = 1;
         }
+
+        GemText.text = gems.ToString();
     }
 }

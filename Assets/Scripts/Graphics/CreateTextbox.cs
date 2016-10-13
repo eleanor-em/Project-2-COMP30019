@@ -14,6 +14,9 @@ public class CreateTextbox {
 
     public static bool ShowingBlockingText { get { return showingText && gameObject.GetComponent<Textbox>().Blocking; } }
 
+    public static void Create(string name, string text, bool blocking = true) {
+        Create(name, new string[] { text }, blocking);
+    }
     public static void Create(string name, string[] text, bool blocking = true) {
         // Set up static instances if we haven't yet
         if (gameObject == null) {
@@ -47,6 +50,11 @@ public class CreateTextbox {
 
     // Returns true if text existed
     public static bool Continue() {
+        // Set up static instances if we haven't yet
+        if (gameObject == null) {
+            gameObject = new GameObject();
+            textboxes = new Queue<TextStruct>();
+        }
         Textbox textbox = gameObject.GetComponent<Textbox>();
         if (textbox != null) {
             if (textbox.Blocking) {
@@ -78,7 +86,7 @@ public class Textbox : MonoBehaviour {
     private const float bottomPadding = 20;
     private const float textLeftPadding = 15;
     private const float textTopPadding = 10;
-    private const float scrollRate = 100f;
+    private const float scrollRate = 1;//100f;
 
     private GUIStyle textStyle;
     private float textWidth;
@@ -95,6 +103,8 @@ public class Textbox : MonoBehaviour {
 
     private bool blocking;
     public bool Blocking { get { return blocking; } }
+
+    private List<string> suffixes;
 
     public void Close() {
         Destroy(this);
@@ -130,12 +140,13 @@ public class Textbox : MonoBehaviour {
         if (text == null) {
             text = new string[] { };
         }
+        suffixes = new List<string>();
         // Load textures
         textboxLeft = Resources.Load<Texture2D>("Textures/textboxLeft");
         textboxMiddle = Resources.Load<Texture2D>("Textures/textbox");
         textboxRight = Resources.Load<Texture2D>("Textures/textboxRight");
-        nextPromptDone = Resources.Load<Texture2D>("Textures/endText");
-        nextPromptNext = Resources.Load<Texture2D>("Textures/nextText");
+        nextPromptNext = Resources.Load<Texture2D>("Textures/xbutton");
+        nextPromptDone = nextPromptNext;
         // Set up variables
         this.name = name;
         this.text = new List<string>(text);
@@ -174,8 +185,15 @@ public class Textbox : MonoBehaviour {
         resetCurrentChar();
     }
 
+    private char GetCharAt(float index) {
+        if (textIndex < text.Count && index < text[textIndex].Length) {
+            return text[textIndex][(int)index];
+        }
+        return '\0';
+    }
+
     void Update() {
-        currentChar += scrollRate * Time.deltaTime;
+        currentChar += scrollRate;// * Time.deltaTime;        
         if (currentChar > text[textIndex].Length) {
             currentChar = text[textIndex].Length;
         }
@@ -183,6 +201,25 @@ public class Textbox : MonoBehaviour {
         if (time > blinkRate) {
             time = 0;
             drawNext = !drawNext;
+        }
+        // Handle tags
+        if (GetCharAt(currentChar) == '<') {
+            // Skip to end of tag
+            if (suffixes.Count > 0 && GetCharAt(currentChar + 1) == '/') {
+                while (GetCharAt(currentChar++) != '>') ;
+                // Remove last suffix
+                suffixes.RemoveAt(suffixes.Count - 1);
+            } else {
+                int startIndex = (int)currentChar + 1;
+                // Skip to end of tag name
+                while (GetCharAt(currentChar) != '=' && GetCharAt(currentChar) != '>') {
+                    ++currentChar;
+                }
+                // Add to suffix list
+                suffixes.Add("</" + text[textIndex].Substring(startIndex, (int)currentChar - startIndex) + ">");
+                // Skip to end of tag
+                while (GetCharAt(currentChar++) != '>') ;
+            }
         }
     }
 
@@ -204,6 +241,9 @@ public class Textbox : MonoBehaviour {
         
         // Calculate the string
         string toPrint = text[textIndex].Substring(0, (int)currentChar);
+        foreach (string str in suffixes) {
+            toPrint += str;
+        }
 
         // Draw the string
         r = new Rect(leftPadding + textLeftPadding,
