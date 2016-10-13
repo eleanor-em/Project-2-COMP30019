@@ -3,10 +3,12 @@ using System.Collections;
 
 public class LavaParticleCreator : MonoBehaviour {
     public GameObject Particles;
+    public GameObject Light;
     public float step = 2f;
 
     void Start() {
         Bounds bounds = GetComponent<MeshRenderer>().bounds;
+        Instantiate(Light, bounds.center + new Vector3(0, 2f, 0), Quaternion.identity);
         // Subtract 1 to avoid overlapping other objects
         int xSize = (int)(bounds.size.x / 2) - 1;
         int zSize = (int)(bounds.size.z / 2) - 1;

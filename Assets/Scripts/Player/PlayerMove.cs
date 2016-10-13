@@ -93,18 +93,37 @@ public class PlayerMove : PlayerBehaviour {
             destination = transform.position;
         }
     }
-        
+
     void Start() {
         destination = transform.position;
         controller = GetComponent<CharacterController>();
         playerStamina = GetComponent<PlayerStamina>();
         playerJump = GetComponent<PlayerJump>();
-        /*CreateTextbox.Create("You", new string[]
-                             { "Lorem ipsum dolor sit amet, labore mandamus at per, debet invidunt in mei. Mel mucius argumentum no, ponderum suavitate ex eam. Ex lorem malis legimus his, his aperiam feugait nostrum ex. Ea qui veritus insolens perpetua. Ut eam prima persecuti, nihil nullam at mei. Te eos mucius pertinacia definitionem, ut tation invidunt per. Ex ferri rebum quo, sumo aliquip ius no. Definiebas adversarium te vim, mutat viris vidisse ut est. Ex nullam tamquam fastidii quo. Habeo feugait no eam. Per in affert similique, nec hinc paulo quidam ea. Ne has delicata splendide sententiae, ea vel quod mazim. Has no facer eruditi honestatis. At pro eros adversarium. Te mel voluptua consectetuer. Eros harum accusam no pro. Ut pro prima delicatissimi, vis detracto evertitur ea, his unum forensibus in. Tollit sapientem temporibus et sit, pri latine oportere eu, veritus apeirian sea et. Singulis sensibus forensibus et pro." }
-                            );*/
         // Get a list of all the chest objects
         chests = new List<GameObject>(FindObjectsOfType<GameObject>());
         chests.RemoveAll(gameObj => gameObj.CompareTag("Chest") == false);
+
+        CreateTextbox.Create("", new string[] {
+            "Yes",
+            "No",
+            "Blue",
+            "Green"
+        }, true, true, answer => {
+            switch (answer) {
+                case 0:
+                    CreateTextbox.Create("Yes", "Yes!");
+                    break;
+                case 1:
+                    CreateTextbox.Create("No", "No!");
+                    break;
+                case 2:
+                    CreateTextbox.Create("Blue", "<color=blue>Blue</color>!");
+                    break;
+                case 3:
+                    CreateTextbox.Create("Green", "<color=green>Green</color>!");
+                    break;
+            }
+        });
     }
     
     private void SetDestination() {

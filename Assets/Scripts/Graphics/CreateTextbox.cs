@@ -6,45 +6,61 @@ public class CreateTextbox {
         public string[] text;
         public string name;
         public bool blocking;
+        public bool isQuestion;
+        public QuestionBox.OnAnswer callback;
     }
     private static Queue<TextStruct> textboxes;
     private static GameObject gameObject;
 
     private static bool showingText = false;
+    private static bool showingQuestion = false;
 
-    public static bool ShowingBlockingText { get { return showingText && gameObject.GetComponent<Textbox>().Blocking; } }
-
-    public static void Create(string name, string text, bool blocking = true) {
-        Create(name, new string[] { text }, blocking);
+    public static bool ShowingBlockingText {
+        get {
+            return showingQuestion || (showingText && gameObject.GetComponent<Textbox>().Blocking);
+        }
     }
-    public static void Create(string name, string[] text, bool blocking = true) {
+
+    public static void Create(string name, string text, bool question = false, bool blocking = true,
+                                QuestionBox.OnAnswer callback = null) {
+        Create(name, new string[] { text }, question, blocking, callback);
+    }
+    public static void Create(string name, string[] text, bool question = false, bool blocking = true,
+                                QuestionBox.OnAnswer callback = null) {
         // Set up static instances if we haven't yet
         if (gameObject == null) {
             gameObject = new GameObject();
             textboxes = new Queue<TextStruct>();
         }
-        // If we have no current textboxes, create one
-        if (!showingText) {
-            showingText = true;
-            gameObject.AddComponent<Textbox>()
-                      .Setup(name, text, blocking);
-        } else {
-            // If we do have a textbox, add it to the queue
-            TextStruct textStruct = new TextStruct();
-            textStruct.name = name;
-            textStruct.text = text;
-            textStruct.blocking = blocking;
-            textboxes.Enqueue(textStruct);
+        // Add textbox to the queue
+        TextStruct textStruct = new TextStruct();
+        textStruct.name = name;
+        textStruct.text = text;
+        textStruct.blocking = blocking;
+        textStruct.isQuestion = question;
+        textStruct.callback = callback;
+        textboxes.Enqueue(textStruct);
+        
+        // If we're not showing anything, show the next one
+        if (!showingText && !showingQuestion) {
+            NextTextbox();
         }
     }
 
     private static void NextTextbox() {
+        showingText = false;
+        showingQuestion = false;
         if (textboxes.Count != 0) {
             TextStruct text = textboxes.Dequeue();
-            gameObject.AddComponent<Textbox>()
-                      .Setup(text.name, text.text, text.blocking);
-        } else {
-            showingText = false;
+            if (text.isQuestion) {
+                showingQuestion = true;
+                gameObject.AddComponent<QuestionBox>()
+                          .Setup(text.text, text.callback);
+            } else {
+                showingText = true;
+                gameObject.AddComponent<Textbox>()
+                          .Setup(text.name, text.text, text.blocking);
+            }
         }
     }
 
@@ -55,14 +71,23 @@ public class CreateTextbox {
             gameObject = new GameObject();
             textboxes = new Queue<TextStruct>();
         }
-        Textbox textbox = gameObject.GetComponent<Textbox>();
-        if (textbox != null) {
-            if (textbox.Blocking) {
-                // If this textbox is done, start the next one
-                if (textbox.Continue()) {
-                    NextTextbox();
-                }
+        if (showingQuestion) {
+            QuestionBox question = gameObject.GetComponent<QuestionBox>();
+            if (question != null) {
+                question.Select();
+                NextTextbox();
                 return true;
+            }
+        } else {
+            Textbox textbox = gameObject.GetComponent<Textbox>();
+            if (textbox != null) {
+                if (textbox.Blocking) {
+                    // If this textbox is done, start the next one
+                    if (textbox.Continue()) {
+                        NextTextbox();
+                    }
+                    return true;
+                }
             }
         }
         return false;
@@ -75,18 +100,109 @@ public class CreateTextbox {
     }
 }
 
+public class QuestionBox : MonoBehaviour {
+    private Texture2D textboxLeft;
+    private Texture2D textboxMiddle;
+    private Texture2D textboxRight;
+    private Texture2D selectIcon;
+    private List<string> text;
+    private GUIStyle textStyle;
+    private readonly float leftPadding = Screen.height / 5.75f;
+    private const float bottomPadding = 20;
+    private const float textLeftPadding = 15;
+    private const float textTopPadding = 10;
+    private const float linePadding = 4;
+    private const float iconYoffset = 5;
+    private float textWidth;
+    private float textHeight;
+    private int selected;
+
+    public delegate void OnAnswer(int answer);
+    private OnAnswer callback;
+
+    public void Setup(string[] text, OnAnswer callback) {
+        textboxLeft = Resources.Load<Texture2D>("Textures/textboxLeft");
+        textboxMiddle = Resources.Load<Texture2D>("Textures/textbox");
+        textboxRight = Resources.Load<Texture2D>("Textures/textboxRight");
+        selectIcon = Resources.Load<Texture2D>("Textures/xbutton");
+        this.text = new List<string>(text);
+        this.callback = callback;
+        textStyle = new GUIStyle();
+        textStyle.richText = true;
+        textStyle.fontSize = 22;
+        textStyle.wordWrap = true;
+        textWidth = Screen.width - 2 * leftPadding - textboxLeft.width - textboxRight.width
+                          - 2 * textLeftPadding;
+        textHeight = textboxMiddle.height - 2 * textTopPadding;
+    }
+
+    public void Update() {
+        // Handle answer menu
+        if (Input.GetKeyDown(KeyCode.DownArrow)) {
+            ++selected;
+            if (selected == text.Count) {
+                selected = 0;
+            }
+        }
+        if (Input.GetKey(KeyCode.UpArrow)) {
+            --selected;
+            if (selected < 0) {
+                selected = text.Count - 1;
+            }
+        }
+    }
+    
+    public void Select() {
+        callback(selected);
+        Destroy(this);
+    }
+
+    void OnGUI() {
+        // Draw left
+        Rect r = new Rect(leftPadding, Screen.height - textboxLeft.height - bottomPadding,
+                          textboxLeft.width, textboxLeft.height);
+        GUI.DrawTexture(r, textboxLeft);
+        // Draw middle
+        r = new Rect(leftPadding + textboxLeft.width, Screen.height - textboxMiddle.height - bottomPadding,
+                     Screen.width - 2 * leftPadding - textboxLeft.width - textboxRight.width,
+                     textboxMiddle.height);
+        GUI.DrawTexture(r, textboxMiddle);
+        // Draw right
+        r = new Rect(Screen.width - leftPadding - textboxRight.width,
+                     Screen.height - textboxRight.height - bottomPadding,
+                     textboxRight.width, textboxRight.height);
+        GUI.DrawTexture(r, textboxRight);
+        // Draw the strings
+        r = new Rect(selectIcon.width + leftPadding + textLeftPadding,
+                     Screen.height - bottomPadding - textboxMiddle.height + textTopPadding,
+                     textWidth, textHeight);
+
+        // Find the line height
+        Vector2 size = textStyle.CalcSize(new GUIContent(text[0]));
+        Rect selectR = new Rect(leftPadding + textLeftPadding,
+                     Screen.height - bottomPadding - textboxMiddle.height + textTopPadding
+                     + selected * (size.y + linePadding) - iconYoffset,
+                     selectIcon.width, selectIcon.height);
+
+        foreach (string str in text) {
+            GUI.Label(r, str, textStyle);
+            r.yMin += size.y + linePadding;
+        }
+        GUI.Label(selectR, selectIcon);
+    }
+}
+
 public class Textbox : MonoBehaviour {
     private Texture2D textboxLeft;
     private Texture2D textboxMiddle;
     private Texture2D textboxRight;
-    private Texture2D nextPromptDone;
     private Texture2D nextPromptNext;
 
     private readonly float leftPadding = Screen.height / 5.75f;
     private const float bottomPadding = 20;
     private const float textLeftPadding = 15;
     private const float textTopPadding = 10;
-    private const float scrollRate = 1;//100f;
+    private const float scrollRate = 1f;
 
     private GUIStyle textStyle;
     private float textWidth;
@@ -125,7 +241,7 @@ public class Textbox : MonoBehaviour {
             if (currentChar >= text[textIndex].Length) {
                 textIndex++;
                 if (textIndex >= text.Count) {
-                    Destroy(this);
+                    Close();
                     return true;
                 }
                 resetCurrentChar();
@@ -146,7 +262,6 @@ public class Textbox : MonoBehaviour {
         textboxMiddle = Resources.Load<Texture2D>("Textures/textbox");
         textboxRight = Resources.Load<Texture2D>("Textures/textboxRight");
         nextPromptNext = Resources.Load<Texture2D>("Textures/xbutton");
-        nextPromptDone = nextPromptNext;
         // Set up variables
         this.name = name;
         this.text = new List<string>(text);
@@ -193,7 +308,7 @@ public class Textbox : MonoBehaviour {
     }
 
     void Update() {
-        currentChar += scrollRate;// * Time.deltaTime;        
+        currentChar += scrollRate;        
         if (currentChar > text[textIndex].Length) {
             currentChar = text[textIndex].Length;
         }
@@ -256,13 +371,6 @@ public class Textbox : MonoBehaviour {
                      Screen.height - bottomPadding - textboxMiddle.height + textTopPadding + textHeight
                         - nextPromptNext.height,
                      nextPromptNext.width, nextPromptNext.height);
-        if ((int)currentChar == text[textIndex].Length) {
-            // Draw rectangle if we're on the last box
-            if (textIndex == text.Count - 1) {
-                GUI.DrawTexture(r, nextPromptDone);
-            } else if (drawNext) {
-                GUI.DrawTexture(r, nextPromptNext);
-            }
-        }
+        GUI.DrawTexture(r, nextPromptNext);
     }
 }
