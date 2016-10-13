@@ -1,4 +1,5 @@
-﻿Shader "Custom/GlowShader" {
+﻿// Adapted from http://stackoverflow.com/questions/35422692/how-to-make-an-object-to-glow-in-unity3d
+Shader "Custom/GlowShader" {
 	Properties {
 		_Color ("Color Tint", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
@@ -34,6 +35,7 @@
 
 			// Inverse scale based on distance to edge
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));
+			// Create a glow around the edge
 			o.Emission = _RimColor.rgb * pow(rim, 7.0 - _RimPower);
 		}
 		ENDCG

@@ -79,6 +79,10 @@ public class PlayerJump : PlayerBehaviour {
         if (collider.gameObject.CompareTag("Hazard")) {
             StartCoroutine("Die");
         }
+        if (collider.gameObject.CompareTag("Trap")) {
+            playerMove.Trapped = true;
+            Destroy(collider.gameObject);
+        }
     }
         
     void Update() {
@@ -86,11 +90,13 @@ public class PlayerJump : PlayerBehaviour {
         if (playerMove.Rolling || controller.isGrounded) {
             touchedWall = false;
         }
-        if (Input.GetKeyDown(KeyCode.Z)) {
-            if (controller.isGrounded) {
-                jump = true;
-            } else {
-                WallJump();
+        if (!playerMove.Trapped) {
+            if (Input.GetKeyDown(KeyCode.Z)) {
+                if (controller.isGrounded) {
+                    jump = true;
+                } else {
+                    WallJump();
+                }
             }
         }
     }

@@ -28,6 +28,8 @@ public class PlayerMove : PlayerBehaviour {
 
     public float RollStaminaCost = 40;
 
+    public float TrapShake = 10;
+
     public GameObject moveTargetPrefab;
     public LayerMask CollisionMask;
     
@@ -57,6 +59,9 @@ public class PlayerMove : PlayerBehaviour {
     private List<GameObject> chests;
     private bool nearChest = false;
     public bool NearChest { get { return nearChest; } }
+
+    public bool Trapped { get; set; }
+    private float shakeAmount = 0;
 
     // Coroutine to roll for a given period
     private IEnumerator Roll() {
@@ -156,35 +161,43 @@ public class PlayerMove : PlayerBehaviour {
     }
         
     void Update() {
-        // Find any closed nearby chests
-        nearChest = false;
-        List<GameObject> nearbyChests = chests.FindAll(gameObj =>
-            gameObj.GetComponent<ChestController>().Open == false &&
-            (transform.position - gameObj.transform.position).magnitude < chestRange
-        );
-        if (nearbyChests.Count > 0) {
-            nearChest = true;
-        }
+        if (!Trapped) {
+            // Find any closed nearby chests
+            nearChest = false;
+            List<GameObject> nearbyChests = chests.FindAll(gameObj =>
+                gameObj.GetComponent<ChestController>().Open == false &&
+                (transform.position - gameObj.transform.position).magnitude < chestRange
+            );
+            if (nearbyChests.Count > 0) {
+                nearChest = true;
+            }
 
-        if (Input.GetKeyDown(KeyCode.X)) {
-            if (!rolling && !CreateTextbox.Continue()) {
-                if (nearChest) {
-                    nearbyChests[0].GetComponent<ChestController>().OnOpen(playerStamina);
-                } else {
-                    StartCoroutine("Roll");
+            if (Input.GetKeyDown(KeyCode.X)) {
+                if (!rolling && !CreateTextbox.Continue()) {
+                    if (nearChest) {
+                        nearbyChests[0].GetComponent<ChestController>().OnOpen(playerStamina);
+                    } else {
+                        StartCoroutine("Roll");
+                    }
                 }
             }
-        }
 
-        // On left mouse click
-        if (Input.GetMouseButtonDown(0)) {
-            SetDestination();
-        }
+            // On left mouse click
+            if (Input.GetMouseButtonDown(0)) {
+                SetDestination();
+            }
 
-        // Kill non-roll auto move on the ground
-        if (AutoMove && !rolling && controller.isGrounded) {
-            AutoMove = false;
-            destination = transform.position;
+            // Kill non-roll auto move on the ground
+            if (AutoMove && !rolling && controller.isGrounded) {
+                AutoMove = false;
+                destination = transform.position;
+            }
+        } else {
+            shakeAmount += Input.acceleration.magnitude;
+            if (shakeAmount > TrapShake) {
+                shakeAmount = 0;
+                Trapped = false;
+            }
         }
     }
 
