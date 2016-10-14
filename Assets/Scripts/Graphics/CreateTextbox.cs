@@ -144,7 +144,7 @@ public class QuestionBox : MonoBehaviour {
                 selected = 0;
             }
         }
-        if (Input.GetKey(KeyCode.UpArrow)) {
+        if (Input.GetKeyDown(KeyCode.UpArrow)) {
             --selected;
             if (selected < 0) {
                 selected = text.Count - 1;

@@ -15,13 +15,13 @@
 			#include "Lighting.cginc"
 
 			#pragma multi_compile_fwdbase
-#pragma target 3.0
+			#pragma target 3.0
 
-			// Light values. Support at most 5 lights
+			// Light values. Support at most 8 lights
 			uniform int _PointLightCount;
-			uniform float3 _PointLightColors[5];
-			uniform float3 _PointLightPositions[5];
-			uniform float _PointLightAttenuations[5];
+			uniform float3 _PointLightColors[8];
+			uniform float3 _PointLightPositions[8];
+			uniform float _PointLightAttenuations[8];
 
 			// Lighting parameters
 			uniform float _Ka;		// Ambient albedo
@@ -53,28 +53,44 @@
 				float4 color : COLOR;
 			};
 
+			float3 applyFog(float3 col, float dist) {
+				// Calculate fog from distance to camera
+				float fogFactor = saturate(exp(-dist * _fogDensity));
+				col = lerp(_fogColor.rgb, col, fogFactor);
+				return col;
+			}
+
 			fixed4 calculateLightColor(vertOut v, float3 normal) {
+				// Shadows
+				fixed shadow = LIGHT_ATTENUATION(v);
+				// View ray
+				float3 V = _WorldSpaceCameraPos - v.worldVertex;
+				float dist = length(V);
+				V = normalize(V);
+				// Calculate ambient light
+				float3 ambient = v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * _Ka;
 				// Sum diffuse and specular light for each source
 				float3 sum = float3(0, 0, 0);
 				for (int i = 0; i < _PointLightCount; ++i) {
-					// This is spaghetti. The first part is calculating an attenuation factor
-					// using a Gaussian distribution; then the second part is the diffuse and
-					// specular terms. Sadly Windows Store has an incredibly strict limit
-					// on how many registers the GPU can access, so I have to mash it all together
-					// to reduce the number of local variables.
-					sum += saturate(exp(-pow(_PointLightAttenuations[i].x *
-						length(_PointLightPositions[i] - v.worldVertex), 2)))
-						* (LIGHT_ATTENUATION(v) * _PointLightColors[i].rgb
-							* _Kd * v.color.rgb * saturate(dot(normalize(_PointLightPositions[i] - v.worldVertex), normal))
-							+ _PointLightColors[i].rgb
-							* _Ks * pow(saturate(dot(
-								normalize(_WorldSpaceCameraPos - v.worldVertex + _PointLightPositions[i] - v.worldVertex),
-								normal)), _N));
+					// Light ray
+					float3 L = _PointLightPositions[i] - v.worldVertex;
+					float lightDist = length(L);
+					L = normalize(L);
+
+					// Calculate attenuation factor from a Gaussian
+					float fAtt = saturate(exp(-pow(_PointLightAttenuations[i].x * lightDist, 2)));
+
+					float3 diffuse = shadow * fAtt * _PointLightColors[i].rgb
+						* _Kd * v.color.rgb * saturate(dot(L, normal));
+
+					// Approximation to reflected ray
+					float3 H = normalize(V + L);
+					float3 specular = fAtt * _PointLightColors[i].rgb
+						* _Ks * pow(saturate(dot(H, normal)), _N);
+
+					sum += diffuse + specular;
 				}
-				// Calculate ambient light and fog here
-				return fixed4(lerp(_fogColor.rgb, v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * _Ka + sum,
-					saturate(exp(-length(_WorldSpaceCameraPos - v.worldVertex) * _fogDensity))),
-					LIGHT_ATTENUATION(v) * v.color.a);
+				return fixed4(applyFog(ambient + sum, dist), shadow * v.color.a);
 			}
 
 			vertOut vert(vertIn v)
