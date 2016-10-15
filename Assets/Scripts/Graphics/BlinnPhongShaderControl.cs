@@ -10,7 +10,7 @@ public class BlinnPhongShaderControl : MonoBehaviour {
     public float textureScaleFactor = 0;
 
     public Color fogColor;
-    public float fogDensity = 0.1f;
+    public float fogDensity = 0.06f;
 
     private MeshRenderer meshRenderer;
 
