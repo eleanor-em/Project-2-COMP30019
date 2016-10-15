@@ -233,7 +233,7 @@ public class PlayerMove : PlayerBehaviour {
                 destination = transform.position;
             }
         } else {
-            shakeAmount += Input.acceleration.magnitude;
+            shakeAmount += Input.gyro.userAcceleration.magnitude;
             if (shakeAmount > TrapShake) {
                 shakeAmount = 0;
                 Trapped = false;
@@ -259,5 +259,9 @@ public class PlayerMove : PlayerBehaviour {
         // isGrounded fails if Move isn't handled like this. Set to 0 to allow superposition of velocity
         controller.Move(YSpeed * Vector3.up * Time.fixedDeltaTime);
         YSpeed = 0;
+        // Update facing direction
+        transform.LookAt(transform.position + direction, Vector3.up);
+        // LookAt is off by 90 degrees
+        transform.Rotate(0, -90, 0);
     }
 }
