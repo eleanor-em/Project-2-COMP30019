@@ -17,15 +17,19 @@ public class DrawAction : MonoBehaviour {
     }
 
     void LateUpdate() {
-        actionText.text = "";
         if (CreateTextbox.ShowingBlockingText) {
             actionText.text = "Next";
         }
         else if (playerMove.NearChest) {
             actionText.text = "Open";
         }
+        else if (playerMove.NearNPC) {
+            actionText.text = "Talk";
+        }
         else if (!playerMove.Rolling && playerStamina.Stamina >= playerMove.RollStaminaCost) {
             actionText.text = "Roll";
+        } else {
+            actionText.text = "";
         }
     }
 }

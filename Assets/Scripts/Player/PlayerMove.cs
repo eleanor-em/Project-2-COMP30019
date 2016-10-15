@@ -20,6 +20,9 @@ public abstract class PlayerBehaviour : MonoBehaviour {
                   typeof(PlayerStamina),
                   typeof(PlayerJump))]
 public class PlayerMove : PlayerBehaviour {
+    private bool speedBoost = false;
+    public float BoostRatio = 2f;
+    public float BoostTime = 10;
     public float Speed = 4;
     public float YSpeed { get; set; }
 
@@ -58,13 +61,25 @@ public class PlayerMove : PlayerBehaviour {
     public float AutoMoveSpeed { get; set; }
 
     // Keep track of chests
-    public float chestRange = 10;
+    public float chestRange = 1.5f;
     private List<GameObject> chests;
     private bool nearChest = false;
     public bool NearChest { get { return nearChest; } }
 
+    // Keep track of NPCs
+    public float NPCRange = 2;
+    private List<GameObject> npcs;
+    private bool nearNPC = false;
+    public bool NearNPC { get { return nearNPC; } }
+
     public bool Trapped { get; set; }
     private float shakeAmount = 0;
+
+    private IEnumerator Boost() {
+        speedBoost = true;
+        yield return new WaitForSeconds(BoostTime);
+        speedBoost = false;
+    }
 
     // Coroutine to roll for a given period
     private IEnumerator Roll() {
@@ -102,9 +117,17 @@ public class PlayerMove : PlayerBehaviour {
         controller = GetComponent<CharacterController>();
         playerStamina = GetComponent<PlayerStamina>();
         playerJump = GetComponent<PlayerJump>();
+
         // Get a list of all the chest objects
         chests = new List<GameObject>(FindObjectsOfType<GameObject>());
         chests.RemoveAll(gameObj => gameObj.CompareTag("Chest") == false);
+        // Get a list of all NPC objects
+        npcs = new List<GameObject>(FindObjectsOfType<GameObject>());
+        npcs.RemoveAll(gameObj => gameObj.CompareTag("NPC") == false);
+
+        // Scale button offset; it was tuned for a height of 353px
+        buttonOffset /= 353;
+        buttonOffset *= Screen.height;
     }
     
     private void SetDestination() {
@@ -147,7 +170,8 @@ public class PlayerMove : PlayerBehaviour {
             // Don't actually move if another routine has control, but don't stop from moving afterwards
             if (!AutoMove) {
                 direction = (destination - transform.position).normalized;
-                controller.Move(direction * Speed * Time.fixedDeltaTime);
+                controller.Move(direction * Speed * Time.fixedDeltaTime
+                                * ((speedBoost) ? (BoostRatio) : (1)));
             }
         } else {
             // Check if grounded to handle the case where the player lands on a moving platform
@@ -164,23 +188,35 @@ public class PlayerMove : PlayerBehaviour {
         if (!Trapped) {
             // Find any closed nearby chests
             nearChest = false;
-            List<GameObject> nearbyChests = chests.FindAll(gameObj =>
+            GameObject nearbyChest = chests.Find(gameObj =>
                 gameObj.GetComponent<ChestController>().Open == false &&
                 (transform.position - gameObj.transform.position).magnitude < chestRange
             );
-            if (nearbyChests.Count > 0) {
+            if (nearbyChest != null) {
                 nearChest = true;
             }
+            // Find any nearby NPCs
+            nearNPC = false;
+            GameObject nearbyNPC = npcs.Find(gameObj =>
+                (transform.position - gameObj.transform.position).magnitude < NPCRange
+            );
+            if (nearbyNPC != null) {
+                nearNPC = true;
+            }
+
             // Handle X hint
-            buttonObject.SetActive(nearChest);
+            buttonObject.SetActive(nearChest || nearNPC);
             buttonObject.transform.position = Camera.main.WorldToScreenPoint(transform.position)
                                               + buttonOffset * Vector3.up;
 
-            if (Input.GetKeyDown(KeyCode.X)) {
+            if (!playerJump.Dying && Input.GetKeyDown(KeyCode.X)) {
                 if (!rolling && !CreateTextbox.Continue()) {
                     if (nearChest) {
-                        nearbyChests[0].GetComponent<ChestController>().OnOpen(playerStamina);
-                    } else {
+                        nearbyChest.GetComponent<ChestController>().OnOpen(playerStamina);
+                    } else if (nearNPC) {
+                        nearbyNPC.GetComponent<NPCController>().Interact(playerStamina);
+                    }
+                    else {
                         StartCoroutine("Roll");
                     }
                 }
@@ -216,7 +252,8 @@ public class PlayerMove : PlayerBehaviour {
         }
         if (AutoMove) {
             // Move in a fixed direction if we're rolling
-            controller.Move(direction * AutoMoveSpeed * Time.fixedDeltaTime);
+            controller.Move(direction * AutoMoveSpeed * Time.fixedDeltaTime
+                                * ((speedBoost) ? (BoostRatio) : (1)));
         }
         MoveToDestination();
         // isGrounded fails if Move isn't handled like this. Set to 0 to allow superposition of velocity

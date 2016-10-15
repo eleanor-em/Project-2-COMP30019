@@ -1,6 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System.Collections;
+
+public enum Item {
+    None,
+    PotionOfStamina,
+    SpeedBoots,
+    Ankh
+};
 
 [RequireComponent(typeof(CharacterController),
                   typeof(BlinnPhongShaderControl))]
@@ -10,7 +18,16 @@ public class PlayerStamina : MonoBehaviour {
     public float ImmuneTime = 1;
     public float ImmuneAlpha = 0.5f;
     public int maxHearts = 4;
+    public float PotionBonus = 2;
+    public float PotionTime = 15;
     public Text GemText;
+
+    private bool potionActive = false;
+    public bool PotionActive { get { return potionActive; } }
+
+    public Texture PotionTexture;
+    public Texture BootsTexture;
+    public Texture AnkhTexture;
 
     private int hearts;
     public int Hearts { get { return hearts; } }
@@ -24,13 +41,11 @@ public class PlayerStamina : MonoBehaviour {
 
     private bool immune;
     public bool Immune { get { return immune; } }
-	
-    /// <summary>
-    /// Deduct the given amount of stamina.
-    /// </summary>
-    /// <returns>
-    /// Whether the stamina was high enough to deduct the amount
-    /// </returns>
+
+    private Item item = Item.None;
+    public Item Item { get { return item; } set { if (item == Item.None) item = value; } }
+    public bool HasItem { get { return item != Item.None; } }
+
     public bool DeductStamina(float amount) {
         if (stamina >= amount) {
             stamina -= amount;
@@ -43,12 +58,16 @@ public class PlayerStamina : MonoBehaviour {
         immune = true;
         yield return new WaitForSeconds(ImmuneTime);
         immune = false;
-        yield break;
+    }
+
+    private IEnumerator Potion() {
+        potionActive = true;
+        yield return new WaitForSeconds(PotionTime);
+        potionActive = false;
     }
 
     private void Die() {
-        //// TODO: Have player die if they run out of hearts
-        hearts = maxHearts;
+        SceneManager.LoadScene("main");
     }
 
     public void Damage() {
@@ -56,7 +75,12 @@ public class PlayerStamina : MonoBehaviour {
             hearts--;
             StartCoroutine("Immunity");
             if (hearts <= 0) {
-                Die();
+                if (item == Item.Ankh) {
+                    item = Item.None;
+                    hearts = maxHearts;
+                } else {
+                    Die();
+                }
             }
         }
     }
@@ -74,10 +98,25 @@ public class PlayerStamina : MonoBehaviour {
         hearts = maxHearts;
     }
 
+    private void UseItem() {
+        switch (item) {
+            case Item.PotionOfStamina:
+                StartCoroutine("Potion");
+                break;
+            case Item.SpeedBoots:
+                gameObject.GetComponent<PlayerMove>().StartCoroutine("Boost");
+                break;
+            case Item.Ankh:
+                return;
+        }
+        item = Item.None;
+    }
+
 	void Update () {
         // Regenerate stamina
         stamina += ((controller.isGrounded) ? (StaminaRegen) : (StaminaRegen * InairRegenFactor))
-                    * Time.deltaTime;
+                    * Time.deltaTime
+                    * ((potionActive) ? (PotionBonus) : (1));
         if (stamina > 100) {
             stamina = 100;
         }
@@ -88,6 +127,31 @@ public class PlayerStamina : MonoBehaviour {
             shader.color.a = 1;
         }
 
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            UseItem();
+        }
+
         GemText.text = gems.ToString();
+    }
+
+    void OnGUI() {
+        if (item != Item.None) {
+            Texture tex = null;
+            switch (item) {
+                case Item.PotionOfStamina:
+                    tex = PotionTexture;
+                    break;
+                case Item.SpeedBoots:
+                    tex = BootsTexture;
+                    break;
+                case Item.Ankh:
+                    tex = AnkhTexture;
+                    break;
+                default:
+                    return;
+            }
+            Rect r = new Rect(Screen.width / 2 + 3 - tex.width / 2, 3, 100, 100);
+            GUI.Label(r, tex);
+        }
     }
 }

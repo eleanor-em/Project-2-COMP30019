@@ -1,15 +1,10 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEngine.UI;
 
 public class ButtonController : MonoBehaviour {
+    public bool Active { get; set; }
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    void Update() {
+        GetComponent<Image>().enabled = Active;
+    }
 }

@@ -7,6 +7,7 @@ public class DrawHearts : MonoBehaviour {
     public Texture EmptyHeartTexture;
     public Texture emptyStaminaTexture;
     public Texture staminaTexture;
+    public Texture staminaGlowTexture;
     public float xOffset;
     public float yOffset;
 
@@ -17,8 +18,15 @@ public class DrawHearts : MonoBehaviour {
 	}
 	
     void OnGUI() {
+        Rect r;
+
+        if (stamina.PotionActive) {
+            r = new Rect(0, 30, 180, 32);
+            GUI.DrawTexture(r, staminaGlowTexture);
+        }
+
         // Draw hearts
-        Rect r = new Rect(xOffset, yOffset, Screen.width, Screen.height);
+        r = new Rect(xOffset, yOffset, Screen.width, Screen.height);
         GUILayout.BeginArea(r);
         GUILayout.BeginHorizontal();
         for (int i = 0; i < stamina.maxHearts; ++i) {
@@ -27,6 +35,7 @@ public class DrawHearts : MonoBehaviour {
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
         GUILayout.EndArea();
+
         // Draw stamina bar
         r = new Rect(5, 42, 160, 12);
         GUI.DrawTexture(r, emptyStaminaTexture);

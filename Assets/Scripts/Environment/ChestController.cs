@@ -19,7 +19,7 @@ public class ChestController : MonoBehaviour {
             material.SetTexture("_MainTex", openTex);
             material.SetTexture("_BumpMap", openMap);
             
-            CreateTextbox.Create("Chest", "You found <color=green>" + gems.ToString() + " gems</color>!");
+            CreateTextbox.Create("Chest", "You found <color=blue>" + gems.ToString() + " gems</color>!");
         }
     }
 }

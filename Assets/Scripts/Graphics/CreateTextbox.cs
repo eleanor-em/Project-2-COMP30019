@@ -237,6 +237,7 @@ public class Textbox : MonoBehaviour {
     // Returns true if the text is finished
     public bool Continue() {
         if (blocking) {
+            suffixes.Clear();
             // Skip to the end if we haven't finished, go to next line if we have
             if (currentChar >= text[textIndex].Length) {
                 textIndex++;
