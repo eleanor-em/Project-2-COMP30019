@@ -25,6 +25,7 @@ public class PlayerMove : PlayerBehaviour {
     public float BoostTime = 10;
     public float Speed = 4;
     public float YSpeed { get; set; }
+    public float rotateSpeed = 0.5f;
 
     public float RollTime = 0.4f;
     public float RollSpeed = 8;
@@ -259,9 +260,9 @@ public class PlayerMove : PlayerBehaviour {
         // isGrounded fails if Move isn't handled like this. Set to 0 to allow superposition of velocity
         controller.Move(YSpeed * Vector3.up * Time.fixedDeltaTime);
         YSpeed = 0;
-        // Update facing direction
-        transform.LookAt(transform.position + direction, Vector3.up);
-        // LookAt is off by 90 degrees
-        transform.Rotate(0, -90, 0);
+        // Update facing direction; look is off by 90 degrees for some reason.
+        transform.rotation = Quaternion.Lerp(transform.rotation,
+                                        Quaternion.LookRotation(direction) * Quaternion.Euler(0, -90, 0),
+                                        rotateSpeed);
     }
 }
