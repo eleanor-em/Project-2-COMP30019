@@ -67,7 +67,8 @@ public class PlayerStamina : MonoBehaviour {
     }
 
     private void Die() {
-        SceneManager.LoadScene("main");
+        // Restart scene
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void Damage() {

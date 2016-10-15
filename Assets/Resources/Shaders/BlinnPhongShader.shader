@@ -2,10 +2,10 @@
 {
 	SubShader
 	{
-		Tags{ "RenderType" = "Opaque" }
+		Tags { "RenderType" = "Opaque" }
 		Pass
 		{
-			Tags{ "LightMode" = "ForwardBase" }
+			Tags { "LightMode" = "ForwardBase" }
 			CGPROGRAM
 
 			#pragma vertex vert
@@ -16,6 +16,7 @@
 			#include "Lighting.cginc"
 
 			#pragma multi_compile_fwdbase
+			#pragma target 3.0
 
 			// Light values. Support at most 8 lights
 			uniform int _PointLightCount;
@@ -35,7 +36,7 @@
 			uniform float _fogDensity;
 
 			struct vertIn {
-				float4 pos : POSITION;
+				float4 vertex : POSITION;
 				float4 normal : NORMAL;
 			};
 
@@ -90,9 +91,9 @@
 			vertOut vert(vertIn v)
 			{
 				vertOut o;
-				o.pos = mul(UNITY_MATRIX_MVP, v.pos);
+				o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 				// Convert position to world space
-				o.worldVertex = mul(_Object2World, v.pos);
+				o.worldVertex = mul(_Object2World, v.vertex);
 				// Convert normals to local space. This is taking advantage of the transpose
 				// nature of pre vs post multiplication
 				o.worldNormal = normalize(mul(v.normal, _World2Object).xyz);
