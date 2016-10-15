@@ -29,9 +29,12 @@ public class PlayerMove : PlayerBehaviour {
     public float RollStaminaCost = 40;
 
     public float TrapShake = 10;
+    public float buttonOffset;
 
     public GameObject moveTargetPrefab;
     public LayerMask CollisionMask;
+
+    public GameObject buttonObject;
     
     private Vector3 destination;
     // Unit vector that stores the most recent movement direction
@@ -102,28 +105,6 @@ public class PlayerMove : PlayerBehaviour {
         // Get a list of all the chest objects
         chests = new List<GameObject>(FindObjectsOfType<GameObject>());
         chests.RemoveAll(gameObj => gameObj.CompareTag("Chest") == false);
-
-        CreateTextbox.Create("", new string[] {
-            "Yes",
-            "No",
-            "Blue",
-            "Green"
-        }, true, true, answer => {
-            switch (answer) {
-                case 0:
-                    CreateTextbox.Create("Yes", "Yes!");
-                    break;
-                case 1:
-                    CreateTextbox.Create("No", "No!");
-                    break;
-                case 2:
-                    CreateTextbox.Create("Blue", "<color=blue>Blue</color>!");
-                    break;
-                case 3:
-                    CreateTextbox.Create("Green", "<color=green>Green</color>!");
-                    break;
-            }
-        });
     }
     
     private void SetDestination() {
@@ -190,6 +171,10 @@ public class PlayerMove : PlayerBehaviour {
             if (nearbyChests.Count > 0) {
                 nearChest = true;
             }
+            // Handle X hint
+            buttonObject.SetActive(nearChest);
+            buttonObject.transform.position = Camera.main.WorldToScreenPoint(transform.position)
+                                              + buttonOffset * Vector3.up;
 
             if (Input.GetKeyDown(KeyCode.X)) {
                 if (!rolling && !CreateTextbox.Continue()) {
