@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(MeshRenderer),
                   typeof(MeshFilter))]
@@ -7,7 +8,8 @@ public class BlinnPhongShaderControl : MonoBehaviour {
     public Texture2D texture = null;
     public Texture2D normalMap = null;
     public Color color = Color.white;
-    public float textureScaleFactor = 0;
+    public float textureScaleFactorX = 1;
+    public float textureScaleFactorY = 1;
 
     public Color fogColor;
     public float fogDensity = 0.06f;
@@ -47,8 +49,11 @@ public class BlinnPhongShaderControl : MonoBehaviour {
     }
     
 	void Start () {
-        // Grab the light array
-        lights = FindObjectsOfType<Light>();
+        // Grab the light array, only selecting point lights
+        var list = new List<Light>(FindObjectsOfType<Light>());
+        list.RemoveAll(light => light.type != LightType.Point);
+        lights = list.ToArray();
+                                                            
         // Set shader values
         meshRenderer = GetComponent<MeshRenderer>();
         // Automatically get the correct shader, and add parameters as needed
@@ -62,11 +67,12 @@ public class BlinnPhongShaderControl : MonoBehaviour {
 
             meshRenderer.material.SetTexture("_MainTex", texture);
             // This is for sizing/tiling non-UV-mapped textures
-            if (textureScaleFactor != 0) {
+            if (textureScaleFactorX != 0 && textureScaleFactorY != 0) {
                 // Calculate scaling factors by finding bounds
                 var mf = GetComponent<MeshFilter>();
                 var bounds = mf.mesh.bounds;
-                var size = Vector3.Scale(bounds.size, transform.localScale) * textureScaleFactor;
+                var size = Vector3.Scale(bounds.size, transform.localScale);
+                size.Scale(new Vector3(textureScaleFactorX, 0f, textureScaleFactorY));
                 // Use x and z bounds for small y
                 if (size.y < 0.001f) {
                     size.y = size.z;

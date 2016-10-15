@@ -68,7 +68,7 @@
 				float dist = length(V);
 				V = normalize(V);
 				// Calculate ambient light
-				float3 ambient = v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * _Ka;
+				float3 ambient = shadow * v.color.rgb * UNITY_LIGHTMODEL_AMBIENT.rgb * _Ka;
 				// Sum diffuse and specular light for each source
 				float3 sum = float3(0, 0, 0);
 				for (int i = 0; i < _PointLightCount; ++i) {
@@ -85,7 +85,7 @@
 
 					// Approximation to reflected ray
 					float3 H = normalize(V + L);
-					float3 specular = fAtt * _PointLightColors[i].rgb
+					float3 specular = shadow * fAtt * _PointLightColors[i].rgb
 						* _Ks * pow(saturate(dot(H, normal)), _N);
 
 					sum += diffuse + specular;

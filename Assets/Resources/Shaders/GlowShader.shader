@@ -33,7 +33,7 @@ Shader "Custom/GlowShader" {
 			o.Alpha = c.a;
 			o.Normal = UnpackNormal(tex2D(_BumpMap, IN.uv_BumpMap));
 
-			// Inverse scale based on distance to edge
+			// Inverse scale based on distance to edge from view direction
 			half rim = 1.0 - saturate(dot(normalize(IN.viewDir), o.Normal));
 			// Create a glow around the edge
 			o.Emission = _RimColor.rgb * pow(rim, 7.0 - _RimPower);
