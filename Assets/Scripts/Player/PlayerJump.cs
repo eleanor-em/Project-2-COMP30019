@@ -85,6 +85,7 @@ public class PlayerJump : PlayerBehaviour {
         }
         if (collider.gameObject.CompareTag("TextTrigger")) {
             CreateTextbox.Close();
+            Destroy(collider.gameObject);
         }
     }
         
