@@ -83,6 +83,9 @@ public class PlayerJump : PlayerBehaviour {
             playerMove.Trapped = true;
             Destroy(collider.gameObject);
         }
+        if (collider.gameObject.CompareTag("TextTrigger")) {
+            CreateTextbox.Close();
+        }
     }
         
     void Update() {

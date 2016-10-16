@@ -59,7 +59,7 @@ public class CreateTextbox {
             } else {
                 showingText = true;
                 gameObject.AddComponent<Textbox>()
-                          .Setup(text.name, text.text, text.blocking);
+                          .Setup(text.name, text.text, text.blocking, text.callback);
             }
         }
     }
@@ -95,8 +95,11 @@ public class CreateTextbox {
 
     public static void Close() {
         Textbox textbox = gameObject.GetComponent<Textbox>();
-        textbox.Close();
-        NextTextbox();
+        // Triggers only close blocking text
+        if (!textbox.Blocking) {
+            textbox.Close();
+            NextTextbox();
+        }
     }
 }
 
@@ -203,6 +206,7 @@ public class Textbox : MonoBehaviour {
     private const float textLeftPadding = 15;
     private const float textTopPadding = 10;
     private const float scrollRate = 1f;
+    private QuestionBox.OnAnswer callback;
 
     private GUIStyle textStyle;
     private float textWidth;
@@ -223,6 +227,9 @@ public class Textbox : MonoBehaviour {
     private List<string> suffixes;
 
     public void Close() {
+        if (callback != null) {
+            callback(0);
+        }
         Destroy(this);
     }
 
@@ -253,7 +260,8 @@ public class Textbox : MonoBehaviour {
         return false;
     }
 
-    public void Setup(string name = "Unknown", string[] text = null, bool blocking = true) {
+    public void Setup(string name = "Unknown", string[] text = null, bool blocking = true,
+                      QuestionBox.OnAnswer callback = null) {
         if (text == null) {
             text = new string[] { };
         }
@@ -267,6 +275,7 @@ public class Textbox : MonoBehaviour {
         this.name = name;
         this.text = new List<string>(text);
         this.blocking = blocking;
+        this.callback = callback;
         // Set up styles, and cut text if we need to
         textStyle = new GUIStyle();
         textStyle.richText = true;
@@ -367,11 +376,13 @@ public class Textbox : MonoBehaviour {
                      textWidth, textHeight);
         GUI.Label(r, toPrint, textStyle);
 
-        // Draw next prompt
-        r = new Rect(textWidth + leftPadding + textLeftPadding,
-                     Screen.height - bottomPadding - textboxMiddle.height + textTopPadding + textHeight
-                        - nextPromptNext.height,
-                     nextPromptNext.width, nextPromptNext.height);
-        GUI.DrawTexture(r, nextPromptNext);
+        // Draw next prompt if blocking (since player can't skip non-blocking text)
+        if (blocking) {
+            r = new Rect(textWidth + leftPadding + textLeftPadding,
+                         Screen.height - bottomPadding - textboxMiddle.height + textTopPadding + textHeight
+                            - nextPromptNext.height,
+                         nextPromptNext.width, nextPromptNext.height);
+            GUI.DrawTexture(r, nextPromptNext);
+        }
     }
 }
