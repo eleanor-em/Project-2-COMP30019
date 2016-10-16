@@ -21,7 +21,7 @@
 			uniform int _PointLightCount;
 			uniform float3 _PointLightColors[8];
 			uniform float3 _PointLightPositions[8];
-			uniform float _PointLightAttenuations[8];
+			uniform float2 _PointLightAttenuations[8];
 
 			// Lighting parameters
 			uniform float _Ka;		// Ambient albedo

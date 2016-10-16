@@ -50,6 +50,17 @@ public class PyramidController : MonoBehaviour {
         CreateTextbox.Create("Pyramid",
             "Hmm. The ball shows some promise. But I bet you'll never figure out you can <color=blue>press Z to jump</color> up these platforms!",
             false, false, answer => NextMarker());
+        CreateTextbox.Create("Pyramid", "Excellent. I wonder if you realise you can perform <color=blue>wall jumps</color> by jumping into a wall, then <color=blue>jumping again</color>...",
+            false, false, answer => NextMarker());
+        CreateTextbox.Create("Pyramid", "Did I mention that you can roll? <color=blue>Press X to roll</color> forward quickly. You'll need to use it after hitting this switch. Oh, and try not to die.",
+            false, false, answer => NextMarker());
+        CreateTextbox.Create("Pyramid", "Very clever. You're probably feeling mighty proud of yourself, and after all that hard work, you deserve a reward. <color=blue>Press X to open</color> this chest.",
+            false, true, answer => NextMarker());
+    }
+
+    public void FinalText() {
+        CreateTextbox.Create("Pyramid", "Well, I'm getting bored of following you around like this, so you will have to continue alone. Fear not, I will be watching intently...",
+            false, true);
     }
 
     void FixedUpdate() {
@@ -63,7 +74,6 @@ public class PyramidController : MonoBehaviour {
         if (marker != null) {
             Vector3 s = (marker.transform.position - transform.position);
             if (s.sqrMagnitude < MovePrecision) {
-                Debug.Log("Done");
                 marker = null;
             } else {
                 transform.position += s.normalized * MoveSpeed * Time.fixedDeltaTime;

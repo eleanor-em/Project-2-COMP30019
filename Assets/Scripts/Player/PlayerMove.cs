@@ -260,7 +260,7 @@ public class PlayerMove : PlayerBehaviour {
         RaycastHit hit;
         if (Physics.Raycast(transform.position, Vector3.down, out hit) && controller.isGrounded) {
             if (hit.collider.CompareTag("MovingPlatform")) {
-                controller.Move(hit.collider.GetComponent<MovingPlatform>().Speed);
+                controller.Move(hit.collider.GetComponent<MovingPlatform>().Speed * Time.fixedDeltaTime);
             }
         }
         if (!Trapped) {

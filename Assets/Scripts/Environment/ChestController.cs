@@ -9,7 +9,7 @@ public class ChestController : MonoBehaviour {
 
     private bool open = false;
     public bool Open { get { return open; } }
-
+    protected virtual void Opened() { }
     public void OnOpen(PlayerStamina player) {
         if (!open) {
             player.AddGems(gems);
@@ -20,6 +20,7 @@ public class ChestController : MonoBehaviour {
             material.SetTexture("_BumpMap", openMap);
             
             CreateTextbox.Create("Chest", "You found <color=blue>" + gems.ToString() + " gems</color>!");
+            Opened();
         }
     }
 }

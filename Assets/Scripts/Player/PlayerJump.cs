@@ -64,6 +64,9 @@ public class PlayerJump : PlayerBehaviour {
         if (hit.normal == Vector3.up && !dying && !hit.collider.CompareTag("MovingPlatform")) {
             lastTouched = hit.gameObject;
         }
+        if (hit.collider.CompareTag("Switch")) {
+            hit.gameObject.GetComponent<SwitchController>().Press();
+        }
     }
 
     private IEnumerator Die() {
@@ -86,6 +89,27 @@ public class PlayerJump : PlayerBehaviour {
         if (collider.gameObject.CompareTag("TextTrigger")) {
             CreateTextbox.Close();
             Destroy(collider.gameObject);
+        }
+        if (collider.gameObject.CompareTag("FinalTrigger")) {
+            GameObject.Find("Pyramid").GetComponent<PyramidController>().FinalText();
+            Destroy(collider.gameObject);
+        }
+        if (collider.gameObject.CompareTag("Door")) {
+            CreateTextbox.Create("You", "Would you like to leave the tutorial?", false, true,
+                                 result => CreateTextbox.Create("You", new string[] { "Leave", "Stay" },
+                                                                true, true,
+                                                                answer => {
+                                                                    switch (answer) {
+                                                                        // Leave
+                                                                        case 0:
+                                                                            Application.Quit();
+                                                                            break;
+                                                                        // Stay
+                                                                        case 1:
+                                                                            CreateTextbox.Clear();
+                                                                            break;
+                                                                    }
+                                                                }));
         }
     }
         

@@ -31,6 +31,9 @@ public class CreateTextbox {
         font = Resources.Load<Font>("Fonts/Montserrat-Regular");
     }
 
+    public static void Clear() {
+        textboxes.Clear();
+    }
     public static void Create(string name, string text, bool question = false, bool blocking = true,
                                 QuestionBox.OnAnswer callback = null) {
         Create(name, new string[] { text }, question, blocking, callback);

@@ -42,8 +42,20 @@ public class PlayerStamina : MonoBehaviour {
     private bool immune;
     public bool Immune { get { return immune; } }
 
+    private static bool hadItem = false;
     private Item item = Item.None;
-    public Item Item { get { return item; } set { if (item == Item.None) item = value; } }
+    public Item Item {
+        get { return item; }
+        set {
+            if (item == Item.None) {
+                item = value;
+            }
+            if (hadItem == false) {
+                CreateTextbox.Create("You", "You got an item! <color=blue>Press C to use</color> your item.");
+                hadItem = true;
+            }
+        }
+    }
     public bool HasItem { get { return item != Item.None; } }
 
     public bool DeductStamina(float amount) {
