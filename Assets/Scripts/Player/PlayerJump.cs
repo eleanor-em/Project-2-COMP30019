@@ -17,6 +17,8 @@ public class PlayerJump : PlayerBehaviour {
     private PlayerMove playerMove;
     private PlayerStamina playerStamina;
 
+    private static bool hasTrapped = false;
+
     private bool touchedWall;
     public bool TouchedWall { get { return touchedWall; } set { touchedWall = value; } }
     private Vector3 wallNormal;
@@ -83,6 +85,10 @@ public class PlayerJump : PlayerBehaviour {
             StartCoroutine("Die");
         }
         if (collider.gameObject.CompareTag("Trap")) {
+            if (!hasTrapped) {
+                CreateTextbox.Create("You", "You fell into a trap! <color=blue>Shake the tablet</color> to escape.");
+                hasTrapped = true;
+            }
             playerMove.Trapped = true;
             Destroy(collider.gameObject);
         }
