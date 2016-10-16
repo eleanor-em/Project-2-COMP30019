@@ -15,10 +15,20 @@ public class CreateTextbox {
     private static bool showingText = false;
     private static bool showingQuestion = false;
 
+    public static Font Font { get { return font; } }
+    private static Font font = null;
+    public static readonly int FontSize = 36;
+
     public static bool ShowingBlockingText {
         get {
             return showingQuestion || (showingText && gameObject.GetComponent<Textbox>().Blocking);
         }
+    }
+    
+    private static void Setup() {
+        gameObject = new GameObject();
+        textboxes = new Queue<TextStruct>();
+        font = Resources.Load<Font>("Fonts/Montserrat-Regular");
     }
 
     public static void Create(string name, string text, bool question = false, bool blocking = true,
@@ -29,8 +39,7 @@ public class CreateTextbox {
                                 QuestionBox.OnAnswer callback = null) {
         // Set up static instances if we haven't yet
         if (gameObject == null) {
-            gameObject = new GameObject();
-            textboxes = new Queue<TextStruct>();
+            Setup();
         }
         // Add textbox to the queue
         TextStruct textStruct = new TextStruct();
@@ -68,8 +77,7 @@ public class CreateTextbox {
     public static bool Continue() {
         // Set up static instances if we haven't yet
         if (gameObject == null) {
-            gameObject = new GameObject();
-            textboxes = new Queue<TextStruct>();
+            Setup();
         }
         if (showingQuestion) {
             QuestionBox question = gameObject.GetComponent<QuestionBox>();
@@ -115,7 +123,7 @@ public class QuestionBox : MonoBehaviour {
     private const float textLeftPadding = 15;
     private const float textTopPadding = 10;
     private const float linePadding = 4;
-    private const float iconYoffset = 5;
+    private const float iconYoffset = 8;
     private float textWidth;
     private float textHeight;
     private int selected;
@@ -131,8 +139,9 @@ public class QuestionBox : MonoBehaviour {
         this.text = new List<string>(text);
         this.callback = callback;
         textStyle = new GUIStyle();
+        textStyle.font = CreateTextbox.Font;
         textStyle.richText = true;
-        textStyle.fontSize = 22;
+        textStyle.fontSize = CreateTextbox.FontSize;
         textStyle.wordWrap = true;
         textWidth = Screen.width - 2 * leftPadding - textboxLeft.width - textboxRight.width
                           - 2 * textLeftPadding;
@@ -184,9 +193,8 @@ public class QuestionBox : MonoBehaviour {
         Vector2 size = textStyle.CalcSize(new GUIContent(text[0]));
         Rect selectR = new Rect(leftPadding + textLeftPadding,
                      Screen.height - bottomPadding - textboxMiddle.height + textTopPadding
-                     + selected * (size.y + linePadding) - iconYoffset,
+                     + selected * (size.y + linePadding) + iconYoffset,
                      selectIcon.width, selectIcon.height);
-
         foreach (string str in text) {
             GUI.Label(r, str, textStyle);
             r.yMin += size.y + linePadding;
@@ -278,8 +286,9 @@ public class Textbox : MonoBehaviour {
         this.callback = callback;
         // Set up styles, and cut text if we need to
         textStyle = new GUIStyle();
+        textStyle.font = CreateTextbox.Font;
         textStyle.richText = true;
-        textStyle.fontSize = 22;
+        textStyle.fontSize = CreateTextbox.FontSize;
         textStyle.wordWrap = true;
         // Calculate where to cut the string
         textWidth = Screen.width - 2 * leftPadding - textboxLeft.width - textboxRight.width

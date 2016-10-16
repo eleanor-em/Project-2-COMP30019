@@ -45,10 +45,10 @@ public class PyramidController : MonoBehaviour {
         markers.Sort(new MarkerComparer(transform.position));
 
         CreateTextbox.Create("Pyramid",
-            "Nyeh heh heh! I bet you'll never figure out that you can <color=blue>press Z to jump</color> up these platforms!",
+            "Welcome to my Dungeon of Doom! First things first. <color=blue>Tap the screen</color> to move around. You only need a tap, no need to hold it down.",
             false, false, answer => NextMarker());
         CreateTextbox.Create("Pyramid",
-            "Hmm... I guess that was pretty easy. Now for the piece de resistance -- the moving platform! Bwa ha ha ha ha.",
+            "Hmm. The ball shows some promise. But I bet you'll never figure out you can <color=blue>press Z to jump</color> up these platforms!",
             false, false, answer => NextMarker());
     }
 

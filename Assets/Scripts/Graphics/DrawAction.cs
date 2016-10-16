@@ -9,7 +9,7 @@ public class DrawAction : MonoBehaviour {
     public GameObject player;
     private PlayerStamina playerStamina;
     private PlayerMove playerMove;
-
+    
     void Start() {
         playerStamina = player.GetComponent<PlayerStamina>();
         playerMove = player.GetComponent<PlayerMove>();
