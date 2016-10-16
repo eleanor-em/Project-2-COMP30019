@@ -39,6 +39,8 @@ public class PlayerMove : PlayerBehaviour {
     public LayerMask CollisionMask;
 
     public GameObject buttonObject;
+    public GameObject leftFoot;
+    public GameObject rightFoot;
     
     private Vector3 destination;
     // Unit vector that stores the most recent movement direction
@@ -54,6 +56,8 @@ public class PlayerMove : PlayerBehaviour {
     // State variables
     private bool rolling = false;
     public bool Rolling { get { return rolling; } }
+    private float rollRotateSpeed;
+    private float rollAmount;
 
     private bool moving = false;
     public bool Moving { get { return moving; } }
@@ -97,6 +101,7 @@ public class PlayerMove : PlayerBehaviour {
     private void StopRoll() {
         rolling = false;
         AutoMove = false;
+        rollAmount = 0;
         // Update destination (if we weren't still moving)
         if (!moving) {
             destination = transform.position;
@@ -129,6 +134,9 @@ public class PlayerMove : PlayerBehaviour {
         // Scale button offset; it was tuned for a height of 353px
         buttonOffset /= 353;
         buttonOffset *= Screen.height;
+
+        // Calculate how many degrees we need to roll per second
+        rollRotateSpeed = 360 / RollTime;
     }
     
     private void SetDestination() {
@@ -162,6 +170,7 @@ public class PlayerMove : PlayerBehaviour {
         if (moveTarget != null) {
             destination = moveTarget.transform.position;
         }
+        bool moved = false;
         // Move only in x and z
         destination.Set(destination.x,
                         transform.position.y,
@@ -171,6 +180,7 @@ public class PlayerMove : PlayerBehaviour {
             // Don't actually move if another routine has control, but don't stop from moving afterwards
             if (!AutoMove) {
                 direction = (destination - transform.position).normalized;
+                moved = true;
                 controller.Move(direction * Speed * Time.fixedDeltaTime
                                 * ((speedBoost) ? (BoostRatio) : (1)));
             }
@@ -183,6 +193,8 @@ public class PlayerMove : PlayerBehaviour {
             destination = transform.position;
             moving = false;
         }
+        leftFoot.GetComponent<FootController>().Moving = moved;
+        rightFoot.GetComponent<FootController>().Moving = moved;
     }
         
     void Update() {
@@ -251,18 +263,28 @@ public class PlayerMove : PlayerBehaviour {
                 controller.Move(hit.collider.GetComponent<MovingPlatform>().Speed);
             }
         }
-        if (AutoMove) {
-            // Move in a fixed direction if we're rolling
-            controller.Move(direction * AutoMoveSpeed * Time.fixedDeltaTime
-                                * ((speedBoost) ? (BoostRatio) : (1)));
+        if (!Trapped) {
+            if (AutoMove) {
+                // Move in a fixed direction if we're rolling
+                controller.Move(direction * AutoMoveSpeed * Time.fixedDeltaTime
+                                    * ((speedBoost) ? (BoostRatio) : (1)));
+            }
+            MoveToDestination();
         }
-        MoveToDestination();
+        // Update facing direction
+        transform.rotation = Quaternion.AngleAxis(-rollAmount, transform.forward);
+        transform.rotation *= Quaternion.Euler(0, -90, 0)
+                              * Quaternion.LookRotation(direction);
+        // Rotate if we roll
+        if (rolling) {
+            rollAmount += rollRotateSpeed * Time.fixedDeltaTime;
+        }
         // isGrounded fails if Move isn't handled like this. Set to 0 to allow superposition of velocity
         controller.Move(YSpeed * Vector3.up * Time.fixedDeltaTime);
         YSpeed = 0;
-        // Update facing direction; look is off by 90 degrees for some reason.
-        transform.rotation = Quaternion.Lerp(transform.rotation,
-                                        Quaternion.LookRotation(direction) * Quaternion.Euler(0, -90, 0),
-                                        rotateSpeed);
+        if (!controller.isGrounded) {
+            leftFoot.GetComponent<FootController>().Reset();
+            rightFoot.GetComponent<FootController>().Reset();
+        }
     }
 }
