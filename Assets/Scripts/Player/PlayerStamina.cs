@@ -51,7 +51,7 @@ public class PlayerStamina : MonoBehaviour {
                 item = value;
             }
             if (hadItem == false) {
-                CreateTextbox.Create("You", "You got an item! <color=blue>Press C to use</color> your item.");
+                CreateTextbox.Create("You", "You got an item! <color=blue>Press Spacebar to use</color> your item.");
                 hadItem = true;
             }
         }
