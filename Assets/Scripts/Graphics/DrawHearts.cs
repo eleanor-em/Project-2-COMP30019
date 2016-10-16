@@ -21,7 +21,7 @@ public class DrawHearts : MonoBehaviour {
         Rect r;
 
         if (stamina.PotionActive) {
-            r = new Rect(0, 30, 180, 32);
+            r = new Rect(0, 2 * 30, 2 * 180, 2 * 32);
             GUI.DrawTexture(r, staminaGlowTexture);
         }
 
@@ -37,10 +37,10 @@ public class DrawHearts : MonoBehaviour {
         GUILayout.EndArea();
 
         // Draw stamina bar
-        r = new Rect(5, 42, 160, 12);
+        r = new Rect(5, 2 * 42, 2 * 160, 2 * 12);
         GUI.DrawTexture(r, emptyStaminaTexture);
         // Draw percentage bar
-        r = new Rect(6, 43, 158 * stamina.Stamina / 100, 10);
+        r = new Rect(6, 2 * 43, 2 * 158 * stamina.Stamina / 100, 2 * 10);
         GUI.DrawTexture(r, staminaTexture);
     }
 }

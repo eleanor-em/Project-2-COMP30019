@@ -151,7 +151,7 @@ public class PlayerStamina : MonoBehaviour {
                 default:
                     return;
             }
-            Rect r = new Rect(Screen.width / 2 + 3 - tex.width / 2, 3, 100, 100);
+            Rect r = new Rect(Screen.width / 2 + 3 - tex.width / 2, 3, 200, 200);
             GUI.Label(r, tex);
         }
     }
