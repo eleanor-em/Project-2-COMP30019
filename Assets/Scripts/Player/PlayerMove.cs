@@ -198,7 +198,7 @@ public class PlayerMove : PlayerBehaviour {
     }
         
     void Update() {
-        if (!Trapped) {
+		if (!(Input.GetKeyDown(KeyCode.X) && CreateTextbox.Continue()) && !Trapped) {
             // Find any closed nearby chests
             nearChest = false;
             GameObject nearbyChest = chests.Find(gameObj =>
@@ -223,7 +223,7 @@ public class PlayerMove : PlayerBehaviour {
                                               + buttonOffset * Vector3.up;
 
             if (!playerJump.Dying && Input.GetKeyDown(KeyCode.X)) {
-                if (!rolling && !CreateTextbox.Continue()) {
+                if (!rolling) {
                     if (nearChest) {
                         nearbyChest.GetComponent<ChestController>().OnOpen(playerStamina);
                     } else if (nearNPC) {

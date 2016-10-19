@@ -12,7 +12,7 @@ Shader "Custom/GlowShader" {
 		LOD 200
 		
 		CGPROGRAM
-		#pragma surface surf Lambert
+		#pragma surface surf BlinnPhong
 
 		struct Input {
 			float4 color : Color;
